@@ -1,0 +1,4 @@
+{
+  "name": "ecc-universal",
+  "install": "bash .cursor/install.sh"
+}
