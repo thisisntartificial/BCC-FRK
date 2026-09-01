@@ -56,7 +56,8 @@ class WaveformPainter extends CustomPainter {
 
     for (var i = 0; i < waveformData.length; i++) {
       final x = (i / waveformData.length) * size.width;
-      final y = centerY + (waveformData[i] * centerY * 2);
+      final amplitude = waveformData[i].clamp(-1.0, 1.0);
+      final y = centerY + (amplitude * centerY);
       if (i == 0) {
         path.moveTo(x, y);
       } else {
@@ -64,6 +65,7 @@ class WaveformPainter extends CustomPainter {
       }
     }
 
+    canvas.clipRect(Offset.zero & size);
     canvas.drawPath(path, paint);
 
     final centerLinePaint = Paint()

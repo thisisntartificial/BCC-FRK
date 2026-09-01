@@ -89,7 +89,8 @@ class FrequencyAnalyzer extends StatelessWidget {
                         color: isActive
                             ? AppColors.primary
                             : AppColors.textSecondary,
-                        fontSize: 6,
+                        fontSize: 9,
+                        height: 1.1,
                       ),
                     ),
                   ],

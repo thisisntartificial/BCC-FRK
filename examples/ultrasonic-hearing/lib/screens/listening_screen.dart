@@ -26,11 +26,16 @@ class _ListeningScreenState extends State<ListeningScreen> {
   StreamSubscription<AudioAnalysis>? _analysisSubscription;
   AudioAnalysis? _currentAnalysis;
   bool _isListening = false;
+  bool _isDemoMode = false;
   bool _isRecording = false;
   double _amplification = AudioSettings.defaultAmplification;
   bool _noiseGateEnabled = true;
   final List<String> _eventLog = [];
   double _clarityScore = 0;
+  bool _voiceActive = false;
+  DateTime? _lastVoiceLog;
+
+  static const Duration _voiceLogInterval = Duration(seconds: 3);
 
   @override
   void initState() {
@@ -42,14 +47,47 @@ class _ListeningScreenState extends State<ListeningScreen> {
     if (!mounted) return;
     setState(() {
       _currentAnalysis = analysis;
-      _clarityScore = (analysis.signalToNoiseRatio * 10).clamp(0, 100);
-
-      if (analysis.voiceDetected && _isListening) {
-        _addToLog(
-          'Speech-like energy — ${analysis.dominantFrequency.toStringAsFixed(0)} Hz',
-        );
-      }
+      // Map a useful SNR span (0-40 dB) onto the 0-100 clarity scale so the
+      // readout does not saturate as soon as any signal is present.
+      _clarityScore = (analysis.signalToNoiseRatio / 40 * 100).clamp(0, 100);
     });
+
+    if (_isListening) {
+      _logVoiceActivity(analysis);
+    }
+  }
+
+  /// Records speech transitions only, so 20 frames per second of analysis do
+  /// not bury the log in duplicate entries.
+  void _logVoiceActivity(AudioAnalysis analysis) {
+    final now = DateTime.now();
+
+    if (!analysis.voiceDetected) {
+      if (_voiceActive) {
+        _voiceActive = false;
+        _addToLog('Speech-like energy ended');
+      }
+      return;
+    }
+
+    if (!_voiceActive) {
+      _voiceActive = true;
+      _lastVoiceLog = now;
+      _addToLog(
+        'Speech-like energy — ${analysis.dominantFrequency.toStringAsFixed(0)} Hz',
+      );
+      return;
+    }
+
+    final since = _lastVoiceLog == null
+        ? _voiceLogInterval
+        : now.difference(_lastVoiceLog!);
+    if (since >= _voiceLogInterval) {
+      _lastVoiceLog = now;
+      _addToLog(
+        'Speech-like energy — ${analysis.dominantFrequency.toStringAsFixed(0)} Hz',
+      );
+    }
   }
 
   void _addToLog(String message) {
@@ -70,31 +108,66 @@ class _ListeningScreenState extends State<ListeningScreen> {
       await _audioService.stopListening();
       setState(() {
         _isListening = false;
+        _isDemoMode = false;
         _currentAnalysis = null;
+        _voiceActive = false;
+        _lastVoiceLog = null;
       });
       _addToLog('Listening stopped');
       return;
     }
 
-    final started = await _audioService.startListening();
-    if (!started) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Microphone permission is required to listen.'),
-        ),
-      );
-      _addToLog('Microphone permission denied');
-      return;
+    final result = await _audioService.startListening();
+    if (!mounted) return;
+
+    switch (result) {
+      case StartListeningResult.permissionDenied:
+        _showMessage('Microphone permission is required to listen.');
+        _addToLog('Microphone permission denied');
+        return;
+      case StartListeningResult.unavailable:
+        _showMessage(
+          'No microphone available. Use Demo to preview the analyzer.',
+        );
+        _addToLog('No capture device available');
+        return;
+      case StartListeningResult.started:
+        break;
     }
 
-    setState(() => _isListening = true);
+    setState(() {
+      _isListening = true;
+      _isDemoMode = false;
+    });
     _addToLog('Listening started');
+    await _pulse();
+  }
 
-    final canVibrate = await Vibration.hasVibrator() ?? false;
-    if (canVibrate) {
-      await Vibration.vibrate(duration: 100);
+  void _startDemo() {
+    if (_isListening) return;
+    _audioService.startDemo();
+    setState(() {
+      _isListening = true;
+      _isDemoMode = true;
+    });
+    _addToLog('Demo mode started (synthesized audio)');
+  }
+
+  Future<void> _pulse() async {
+    try {
+      final canVibrate = await Vibration.hasVibrator() ?? false;
+      if (canVibrate) {
+        await Vibration.vibrate(duration: 100);
+      }
+    } on Exception {
+      // Haptics are optional; ignore unsupported platforms.
     }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   Future<void> _toggleRecording() async {
@@ -166,7 +239,9 @@ class _ListeningScreenState extends State<ListeningScreen> {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          _isListening ? 'LISTENING' : 'STANDBY',
+                          _isListening
+                              ? (_isDemoMode ? 'DEMO' : 'LISTENING')
+                              : 'STANDBY',
                           style: TextStyle(
                             color: _isListening
                                 ? AppColors.primary
@@ -210,7 +285,8 @@ class _ListeningScreenState extends State<ListeningScreen> {
                       child: Column(
                         children: [
                           SignalMeter(
-                            signalLevel: _currentAnalysis!.rmsLevel * 10,
+                            signalLevel:
+                                _currentAnalysis!.rmsLevel.clamp(0.0, 1.0),
                             clarityScore: _clarityScore,
                             isActive: _isListening,
                           ),
@@ -245,6 +321,17 @@ class _ListeningScreenState extends State<ListeningScreen> {
                             style: TextStyle(
                               color: AppColors.textSecondary,
                               fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextButton(
+                            onPressed: _startDemo,
+                            child: const Text(
+                              'No microphone? Run demo',
+                              style: TextStyle(
+                                color: AppColors.secondary,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
                         ],
@@ -392,7 +479,7 @@ class _ListeningScreenState extends State<ListeningScreen> {
               Switch(
                 value: _noiseGateEnabled,
                 onChanged: _toggleNoiseGate,
-                activeThumbColor: AppColors.primary,
+                activeColor: AppColors.primary,
               ),
             ],
           ),

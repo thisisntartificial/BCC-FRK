@@ -22,7 +22,26 @@ flutter pub get
 flutter run
 ```
 
-Requires Flutter 3.x and a physical device for microphone access.
+Requires Flutter 3.x (verified against 3.24.5) and a physical device for
+microphone access.
+
+### Previewing without a microphone
+
+The idle screen has a "No microphone? Run demo" action that drives the analyzer
+from synthesized audio, so the full interface can be exercised on machines with
+no capture device (CI, VMs, the web build):
+
+```bash
+flutter build web --release
+python3 -m http.server 8088 --directory build/web
+```
+
+### Checks
+
+```bash
+flutter analyze
+flutter test
+```
 
 ### Platform permissions
 
@@ -40,15 +59,18 @@ Requires Flutter 3.x and a physical device for microphone access.
 <string>UltraSonic Hearing needs the microphone to amplify and analyze ambient audio.</string>
 ```
 
-Scaffold platforms if missing:
+Only the `web` platform is committed. Scaffold the mobile targets with:
 
 ```bash
-flutter create . --project-name ultrasonic_hearing
+flutter create . --project-name ultrasonic_hearing --platforms=android,ios
 ```
 
 ## Notes
 
-- Current audio analysis uses a processing simulation after permission is granted.
-  Replace `AudioService` simulation with live PCM samples from `record` for production.
+- Audio analysis currently runs on a synthesized signal once capture starts.
+  Replace the generator in `AudioService` with live PCM samples from `record`
+  for production capture; the analysis and rendering path is already wired.
+- `AudioService.startListening` returns a `StartListeningResult` so the UI can
+  distinguish a denied permission from a missing capture device.
 - Only record audio you have a lawful right to capture. Follow local consent and
   privacy rules for any shared or archived recordings.
