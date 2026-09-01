@@ -18,17 +18,25 @@ final class LiveMonitor: ObservableObject {
     /// the speaker feeds straight back into the microphone.
     @Published private(set) var requiresHeadphones = false
 
+    /// Amplification as a multiple of the input, shown to the user as "8×".
     @Published var gain: Float = 4 {
         didSet { applyGain() }
     }
 
-    static let gainRange: ClosedRange<Float> = 1 ... 25
+    /// Ceiling is set by what the gain stage can deliver: `AVAudioUnitEQ`
+    /// tops out at +24 dB, which is a little under 16x.
+    static let gainRange: ClosedRange<Float> = 1 ... 15
+
+    private static let maximumGainDB: Float = 24
 
     private let engine = AVAudioEngine()
-    private let mixer = AVAudioMixerNode()
+
+    /// Mixer volume cannot amplify — it is limited to unity — so boosting has
+    /// to happen in a real gain stage measured in decibels.
+    private let amplifier = AVAudioUnitEQ(numberOfBands: 0)
 
     init() {
-        engine.attach(mixer)
+        engine.attach(amplifier)
     }
 
     func start() async {
@@ -79,17 +87,18 @@ final class LiveMonitor: ObservableObject {
         let input = engine.inputNode
         let format = input.outputFormat(forBus: 0)
 
-        engine.connect(input, to: mixer, format: format)
-        engine.connect(mixer, to: engine.mainMixerNode, format: format)
+        engine.connect(input, to: amplifier, format: format)
+        engine.connect(amplifier, to: engine.mainMixerNode, format: format)
         applyGain()
 
         // Metering only. The amplified audio itself never passes through here.
         input.installTap(onBus: 0, bufferSize: 2048, format: format) { [weak self] buffer, _ in
             guard let channel = buffer.floatChannelData?[0] else { return }
-            let samples = Array(
-                UnsafeBufferPointer(start: channel, count: Int(buffer.frameLength))
+            let level = LevelTrackBuilder.decibels(
+                rmsOf: Array(
+                    UnsafeBufferPointer(start: channel, count: Int(buffer.frameLength))
+                )[...]
             )
-            let level = LevelTrackBuilder.decibels(rmsOf: samples[...])
 
             Task { @MainActor in
                 self?.inputLevelDBFS = level
@@ -101,7 +110,9 @@ final class LiveMonitor: ObservableObject {
     }
 
     private func applyGain() {
-        mixer.outputVolume = min(max(gain, LiveMonitor.gainRange.lowerBound),
-                                 LiveMonitor.gainRange.upperBound)
+        let clamped = min(max(gain, LiveMonitor.gainRange.lowerBound),
+                          LiveMonitor.gainRange.upperBound)
+        let decibels = 20 * log10(clamped)
+        amplifier.globalGain = min(decibels, LiveMonitor.maximumGainDB)
     }
 }

@@ -1,4 +1,3 @@
-import HearingCore
 import SwiftUI
 
 struct CaptureView: View {
@@ -65,13 +64,11 @@ struct CaptureView: View {
     }
 
     private var liveSummary: some View {
-        let events = ActivityDetector().segments(for: recorder.levelTrack).filter(\.isActive)
-
-        return VStack(spacing: 6) {
-            Text("\(events.count)")
+        VStack(spacing: 6) {
+            Text("\(recorder.eventCount)")
                 .font(.system(size: 44, weight: .bold, design: .rounded))
                 .foregroundStyle(Theme.accent)
-            Text(events.count == 1 ? "sound event so far" : "sound events so far")
+            Text(recorder.eventCount == 1 ? "sound event so far" : "sound events so far")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }

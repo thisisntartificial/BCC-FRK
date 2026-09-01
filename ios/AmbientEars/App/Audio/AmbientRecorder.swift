@@ -16,10 +16,14 @@ final class AmbientRecorder: ObservableObject {
     /// Loudness index accumulated so far.
     @Published private(set) var levelTrack = LevelTrack(hopDuration: 0.05, levelsDBFS: [])
 
+    /// Running count of distinct sound events, for the capture screen.
+    @Published private(set) var eventCount = 0
+
     private let engine = AVAudioEngine()
     private var accumulator: LevelAccumulator?
     private var destination: URL?
     private var refresher: Task<Void, Never>?
+    private var lastEventScan = Date.distantPast
 
     var elapsed: TimeInterval {
         guard let startedAt else { return 0 }
@@ -112,6 +116,8 @@ final class AmbientRecorder: ObservableObject {
     /// wake the main actor hundreds of times a second for no visible benefit.
     private func startRefreshing() {
         refresher?.cancel()
+        lastEventScan = .distantPast
+
         refresher = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 200_000_000)
@@ -120,8 +126,25 @@ final class AmbientRecorder: ObservableObject {
                 let snapshot = accumulator.snapshot()
                 self.levelTrack = snapshot
                 self.currentLevelDBFS = snapshot.levelsDBFS.last ?? LevelTrack.silenceDBFS
+
+                await self.rescanEventsIfDue(snapshot)
             }
         }
+    }
+
+    /// Counting events means segmenting the whole envelope, which grows without
+    /// bound during an overnight session. Doing that per frame on the main
+    /// actor would stall the interface, so it runs off the main actor and only
+    /// every few seconds.
+    private func rescanEventsIfDue(_ snapshot: LevelTrack) async {
+        guard Date().timeIntervalSince(lastEventScan) >= 3 else { return }
+        lastEventScan = Date()
+
+        let count = await Task.detached(priority: .utility) {
+            ActivityDetector().segments(for: snapshot).filter(\.isActive).count
+        }.value
+
+        eventCount = count
     }
 
     private func teardown() {

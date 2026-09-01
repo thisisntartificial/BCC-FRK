@@ -39,6 +39,37 @@ App/                    iOS app. Requires Xcode.
   Model/                  Recording metadata and formatting
 ```
 
+## First build on a Mac
+
+The app layer has never been compiled, so treat the first build as a
+fix-up pass rather than a clean run:
+
+```bash
+cd ios/AmbientEars
+swift test                 # core, should pass immediately
+
+brew install xcodegen
+xcodegen generate
+open AmbientEars.xcodeproj
+```
+
+Set a signing team and bundle identifier, then build for a **physical
+device**. The simulator's microphone is not worth testing against, and route
+detection for headphones does not behave realistically there.
+
+Worth checking first, in rough order of likelihood of trouble:
+
+1. `AVAudioUnitEQ(numberOfBands: 0)` used purely as a gain stage — confirm
+   `globalGain` takes effect with no bands configured, and add one flat band
+   if it does not.
+2. Input and output formats in `LiveMonitor.startGraph` — if the session
+   gives different sample rates for input and output, the connection will
+   need an explicit format rather than the input's.
+3. `SmartPlayer.resolvedCurrentTime` assumes `playerTime.sampleTime` counts
+   source frames consumed. Verify the scrubber tracks correctly while the
+   rate is above 1.
+4. Background recording actually surviving a screen lock.
+
 ## Building
 
 The core package builds and tests on any platform with a Swift toolchain,
