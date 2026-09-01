@@ -172,7 +172,7 @@ If you exceed 1 s: shrink GOP, cut resolution, disable the preview on the Node, 
 
 When the Node is live, the status screen shows a large **address block** (`192.168.1.42:8787`). Bonjour TXT may include `http=8787`. Video routes require the pairing token.
 
-Launch is free: Wi-Fi (and AWDL) for live video, Bluetooth for nearby pair/control/snapshots. Web can exist as that same LAN URL. Later, web can go paid and get a pretty address (`kitchen.lookout.app`). Do not paywall Phase 1. Details: [references/reachability.md](references/reachability.md). Example listener: [examples/local-http.swift](examples/local-http.swift).
+Launch is free: Wi-Fi (and AWDL) for live video, Bluetooth for nearby pair/control/snapshots. Web can exist as that same LAN URL. Users can **route it themselves** (Tailscale, Pi, VPS) by pasting a Custom URL — always free. Later, Lookout-hosted pretty addresses can go paid. Do not paywall Phase 1. Details: [references/reachability.md](references/reachability.md). Example listener: [examples/local-http.swift](examples/local-http.swift).
 
 ## Phase 2+ Hooks (do not build yet)
 

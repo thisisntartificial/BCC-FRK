@@ -79,12 +79,54 @@ Do not flip this on in Phase 1. When you do, gate **only** the pretty/public URL
 
 A public URL without a token is an open camera. Never ship that.
 
+## Route it yourself (free, always)
+
+Lookout never has to own the away path. The Node is just a device on the house network. Anyone who can reach `:8787` with the token can watch. "Route it yourself" means the user (or a box they already run) forwards that port to wherever they want.
+
+Lookout's job: show the LAN block, accept the token, play video.  
+Their job: make `192.168.1.42:8787` reachable from the place they care about.
+
+```text
+Node :8787  ──►  their tunnel / VPN / home box  ──►  phone or browser
+```
+
+The Viewer has a single field: **Custom URL**. They paste what their route produced. Same token as LAN. No Lookout account. This stays free even after pretty-web goes paid.
+
+### Recipes that actually work
+
+| They already have | What they do | What they paste in Lookout |
+|-------------------|--------------|----------------------------|
+| **Tailscale** on both phones | Same tailnet. Nothing else. | `http://100.x.x.x:8787` or `http://kitchen.tailnet.ts.net:8787` |
+| **WireGuard** home net | Node is a peer (or sits behind the home WG box) | `http://10.0.0.12:8787` |
+| **Pi / Mac on the LAN** | `cloudflared`, Caddy, Caddy + Tailscale, or nginx stream to the phone's LAN IP | `https://cam.their.domain` |
+| **Home Assistant / Frigate** | Point the integration at the Node LAN URL | (they watch in HA, not in Lookout) |
+| **Router port forward** | WAN:443 → `192.168.1.42:8787` | `https://their-dyndns:443` — works until CGNAT; we document, we do not recommend |
+| **Reverse SSH / VPS** | Home box `ssh -R` to a VPS they rent | `https://vps.their.domain` |
+
+Stock iOS cannot run `cloudflared` inside Lookout. If they want Cloudflare or a hostname, the process runs on a **helper** (Pi, Mac, NAS), not on the spare iPhone.
+
+### How the app should treat this
+
+1. Node status always shows the LAN block (so they know what to point the tunnel at).
+2. Viewer → Add camera → **Custom URL** (plus token). Save it as that room.
+3. Optional: "Tailscale detected" if a `100.x` address appears — still their route, not ours.
+4. If the custom URL fails: "Your route is down" — not "Lookout is down."
+5. Do not charge for Custom URL. Paid web is only the pretty Lookout-hosted name.
+
+### What they need to understand
+
+- The spare phone still has to stay open and plugged in. A tunnel does not keep iOS awake.
+- The tunnel endpoint must be on the **same LAN** as the Node (or on the Node via Tailscale). A VPS cannot see `192.168.1.42` unless something at home forwards it.
+- Token stays required. A self-hosted HTTPS name without a token is still an open camera.
+- If they use Tailscale, do not tell them to "turn off VPN."
+
 ## Viewer order
 
 1. Bonjour on Wi-Fi / AWDL  
 2. Typed or scanned address from the Node block  
 3. Bluetooth control + snapshot fallback  
-4. Later, if entitled: pretty web URL  
+4. Saved **Custom URL** (their route)  
+5. Later, if entitled: pretty Lookout web URL
 
 Errors must name the path: "No Wi-Fi camera" vs "Bluetooth only — snapshots" vs "Web address needs Lookout+" vs "Token rejected."
 

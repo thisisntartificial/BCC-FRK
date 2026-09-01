@@ -27,7 +27,7 @@ A single iOS app lets a spare iPhone act as a wireless camera and a primary iPho
 - Do not hide security features to obtain App Store review.
 - Visible LIVE / recording indicator in the Node UI.
 - Frames never leave the device except over a paired connection (LAN, or the same local port via a user-owned tunnel).
-- Away / browser viewing is optional. At launch, the Node shows a local address block. A pretty hosted URL is a later paid surface.
+- Away / browser viewing is optional. At launch, the Node shows a local address block. Users may paste a Custom URL for a route they run themselves (Tailscale, helper box, VPS). That stays free. A pretty Lookout-hosted URL is a later paid surface.
 
 ## Actors and surfaces
 
