@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lookout · Computer</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #000;
+      color: #eee;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+      padding: 2rem 1rem;
+    }
+    h1 {
+      font-family: ui-monospace, monospace;
+      letter-spacing: 0.3em;
+      font-size: 1.4rem;
+      margin: 0;
+    }
+    .block {
+      font-family: ui-monospace, monospace;
+      font-weight: 700;
+      font-size: 1.15rem;
+      text-align: center;
+      padding: 1.25rem 1.5rem;
+      background: #141414;
+      border-radius: 16px;
+      white-space: pre-line;
+    }
+    img {
+      max-width: min(720px, 100%);
+      border-radius: 12px;
+      background: #111;
+      min-height: 180px;
+    }
+    form, .row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: min(720px, 100%);
+    }
+    input {
+      flex: 1 1 180px;
+      padding: 0.7rem 0.8rem;
+      border-radius: 10px;
+      border: 1px solid #333;
+      background: #111;
+      color: #fff;
+    }
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .go { background: #fff; color: #000; }
+    .ghost { background: #1c1c1c; color: #fff; }
+    p { color: #888; max-width: 36rem; text-align: center; }
+    #err { color: #f66; min-height: 1.2em; }
+  </style>
+</head>
+<body>
+  <h1>LOOKOUT</h1>
+  <div class="block" id="block">LOOKOUT · COMPUTER
+this machine
+demo · live</div>
+  <img id="frame" alt="Lookout feed">
+  <p>This computer is a viewer. Point it at a phone’s address block, or run the demo camera on this machine.</p>
+  <form id="form">
+    <input id="url" placeholder="http://192.168.1.42:8787" autocomplete="off">
+    <input id="token" placeholder="Token (if required)" autocomplete="off">
+    <button class="go" type="submit">Watch URL</button>
+    <button class="ghost" type="button" id="demo">Watch demo on this computer</button>
+  </form>
+  <div id="err"></div>
+  <script>
+    const frame = document.getElementById('frame');
+    const err = document.getElementById('err');
+    const block = document.getElementById('block');
+    let timer = null;
+    let objectUrl = null;
+
+    function setBlock(title, line, state) {
+      block.textContent = 'LOOKOUT · ' + title + '\n' + line + '\n' + state;
+    }
+
+    function snapUrl(base, token) {
+      const root = base.replace(/\/$/, '');
+      const url = new URL(root.includes('/snap') ? root : root + '/snap');
+      if (token) url.searchParams.set('token', token);
+      return url.toString();
+    }
+
+    async function pull(url) {
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) throw new Error(response.status === 401 ? 'Token rejected' : 'Your route is down');
+      const blob = await response.blob();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      objectUrl = URL.createObjectURL(blob);
+      frame.src = objectUrl;
+      err.textContent = '';
+    }
+
+    function watch(url) {
+      if (timer) clearInterval(timer);
+      const tick = () => pull(url).catch((error) => { err.textContent = error.message; });
+      tick();
+      timer = setInterval(tick, 400);
+    }
+
+    document.getElementById('form').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const base = document.getElementById('url').value.trim();
+      const token = document.getElementById('token').value.trim();
+      if (!base) { err.textContent = 'Paste a Lookout address'; return; }
+      setBlock('REMOTE', base.replace(/^https?:\/\//, ''), 'Wi-Fi · watching');
+      watch(snapUrl(base, token));
+    });
+
+    document.getElementById('demo').addEventListener('click', () => {
+      setBlock('COMPUTER', location.host, 'demo · live');
+      watch('/snap?token=demo');
+    });
+
+    setBlock('COMPUTER', location.host, 'demo · live');
+    watch('/snap?token=demo');
+  </script>
+</body>
+</html>

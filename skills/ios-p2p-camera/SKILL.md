@@ -42,6 +42,10 @@ Detection Engine                        Alert Manager
 
 Phase 1 success: point an old iPhone at a room, see a live feed on the primary phone in under one second.
 
+Implementation: [`apps/Lookout`](../../apps/Lookout). Open `Lookout.xcodeproj` on a Mac. Phase 1 ships JPEG-over-TCP so two phones work before H.264 SPS/PPS.
+
+Computer viewer (no Xcode): `node apps/Lookout/computer/server.js` then open `http://127.0.0.1:8788`.
+
 ## Name and Positioning
 
 **Lookout** is the main product. Full extras and hardware notes: [references/naming-and-extras.md](references/naming-and-extras.md).

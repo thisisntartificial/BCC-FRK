@@ -1,6 +1,6 @@
 # Lookout / iOS P2P Camera — project CLAUDE.md
 
-Drop this at the root of the Xcode app repo (or merge the rules into an existing CLAUDE.md). Pair it with the `ios-p2p-camera` skill.
+The Phase 1 app lives at `apps/Lookout`. Pair this file with the `ios-p2p-camera` skill.
 
 ## Project Overview
 
