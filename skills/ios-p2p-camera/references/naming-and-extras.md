@@ -2,35 +2,19 @@
 
 Use this when picking a public name or deciding what to add beyond the six-phase roadmap.
 
-## Recommended name
+## Chosen name
 
-**Lookout**
+**Lookout** — main product, build this first.
 
-- One word, easy to say, App Store-safe
-- Means a watch post, not a hidden camera
-- Bonjour type `_lookout._tcp` matches the product
+- One word, App Store-safe, means watch post
+- Bonjour type `_lookout._tcp`
 - Bundle ID shape: `app.lookout.cam` or `com.yourorg.lookout`
 
-Working title "SentinalCam" is a misspelling of Sentinel. If you want the serious brand, spell it **Sentinel**. Do not ship Sentinal.
+**Later split (do not build now):** a separate trap face on the same pairing/stream system (working name Boobytrap). Same phones, same LAN, different personality.
 
-## Shortlist
+**Rejected:** Sentinel, SentinalCam, AirWatch, Nest, Ring, and anything with spy / hidden / nanny / undetectable in the name.
 
-| Name | Tone | Why it works | Risk |
-|------|------|--------------|------|
-| Lookout | Product | Clear, calm, short | Generic English word |
-| Perch | Warm | Spare phone sits on a perch | Soft for a security pitch |
-| SpareCam | Literal | Instantly explains the hardware | Utility-sounding |
-| Sentinel | Serious | Classic watchman | Crowded; spelling trap |
-| Outpost | Multi-node | Remote rooms, one console | Military |
-| Witness | Evidence | Phase 6 recording story | Legal undertone |
-| Relic | Salvage | Old phones get a second life | Not obviously a camera |
-| HouseSit | Domestic | Friends/phones watching the house | Sounds like a service |
-| PeerWatch | Technical | P2P is the point | Dry |
-| Nightwatch | Mood | Overnight armed mode | Slightly theatrical |
-
-**Drop these:** AirWatch (VMware), Nest, Ring, HomeKit-sounding clones, anything with spy / hidden / nanny / undetectable in the name.
-
-**Friends-as-cameras angle:** Perch or HouseSit. Pairing should support a **guest node** that expires at a time you set ("lend me your phone for the party").
+**Friends-as-cameras:** pairing should support a **guest node** that expires at a time you set ("lend me your phone for the party").
 
 ## Extras that work well on stock iOS
 

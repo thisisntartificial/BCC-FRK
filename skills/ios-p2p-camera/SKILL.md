@@ -1,6 +1,6 @@
 ---
 name: ios-p2p-camera
-description: Build a stock-iOS peer-to-peer camera app — Bonjour discovery, Network.framework transport, VideoToolbox H.264, viewer/node roles, local alerts, no cloud. Use for spare-phone security cameras, baby/pet monitors, LAN streaming, Multipeer alternatives, or products like Lookout, Sentinel, or SentinalCam.
+description: Build Lookout, a stock-iOS peer-to-peer camera app — Bonjour discovery, Network.framework transport, VideoToolbox H.264, viewer/node roles, local alerts, no cloud. Use for spare-phone security cameras, baby/pet monitors, LAN streaming, or Multipeer alternatives.
 origin: ECC
 ---
 
@@ -8,7 +8,7 @@ origin: ECC
 
 Turn spare iPhones into local camera nodes. One app, two roles (Camera Node and Viewer). Devices find each other with Bonjour on the same Wi-Fi, stream H.264 over Network.framework, and keep media on-device. Stock iOS only — no jailbreak, no required cloud, no subscription.
 
-This skill is the build playbook. Recommended product name: **Lookout** (see [references/naming-and-extras.md](references/naming-and-extras.md)). Do not ship the misspelling "SentinalCam".
+This skill is the build playbook. Product name: **Lookout**. Bonjour type `_lookout._tcp`. A louder trap face (Boobytrap) may split later on the same system — do not build it in Phase 1. Do not use Sentinel or SentinalCam.
 
 ## When to Use
 
@@ -43,15 +43,7 @@ Phase 1 success: point an old iPhone at a room, see a live feed on the primary p
 
 ## Name and Positioning
 
-| Pick | Why | Avoid if |
-|------|-----|----------|
-| **Lookout** (recommended) | Short, App Store-safe, means watch post | You want a harder security-brand feel |
-| Perch | Warm; phone sits still and watches | You need "security system" energy |
-| SpareCam | Literally what it is | Sounds like a utility, not a product |
-| Sentinel | Serious, memorable | Crowded; do not spell it Sentinal |
-| Outpost | Multi-node story | Feels military |
-
-Full shortlist, extras, and hardware notes: [references/naming-and-extras.md](references/naming-and-extras.md).
+**Lookout** is the main product. Full extras and hardware notes: [references/naming-and-extras.md](references/naming-and-extras.md).
 
 Do **not** hide alarm, recording, or detection features to sneak past App Store review. Local camera apps (Manything, Alfred-class) are a legitimate category. Frame honestly: "use a spare iPhone as a local camera." Put covert-surveillance language and face-recognition-of-strangers behind TestFlight / sideload if needed.
 

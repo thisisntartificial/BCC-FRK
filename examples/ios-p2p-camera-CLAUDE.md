@@ -6,7 +6,7 @@ Drop this at the root of the Xcode app repo (or merge the rules into an existing
 
 Single stock-iOS app, two roles: Camera Node and Viewer. Devices discover each other with Bonjour on the same Wi-Fi and stream H.264 over Network.framework. No vendor cloud, no subscription, no jailbreak.
 
-Product name: **Lookout**. Bonjour type: `_lookout._tcp`. Do not use the misspelling SentinalCam.
+Product name: **Lookout**. Bonjour type: `_lookout._tcp`. Do not use Sentinel or SentinalCam. A trap face may split later — do not build it in Phase 1.
 
 ## Critical Rules
 
