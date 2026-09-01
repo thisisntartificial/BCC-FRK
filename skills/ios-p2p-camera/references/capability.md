@@ -24,12 +24,14 @@ A single iOS app lets a spare iPhone act as a wireless camera and a primary iPho
 - Encrypt the stream before use off a trusted home LAN (Phase 1.5).
 - Do not hide security features to obtain App Store review.
 - Visible LIVE / recording indicator in the Node UI.
-- Frames never leave the device except over the paired LAN connection.
+- Frames never leave the device except over a paired connection (LAN, or the same local port via a user-owned tunnel).
+- Away viewing is optional. Default is LAN. Tunnel is the user's Tailscale / WireGuard / home helper, not a Lookout account.
 
 ## Actors and surfaces
 
-- Camera Node: status UI, pairing PIN, live indicator, later siren/strobe
-- Viewer: discovery list, live feed, later grid, event timeline, panic
+- Camera Node: status UI, pairing PIN, live indicator, LAN URL (`http://<ip>:8787`), later siren/strobe
+- Viewer: discovery list, live feed, typed/overlay URL, later grid, event timeline, panic
+- Local HTTP: `/health`, `/snap`, `/live` (token required)
 - Control plane: arm/disarm, sensitivity, zones, talkback, siren
 - Media plane: H.264 (and later JPEG preview, AAC talkback)
 - Storage: Node disk first; Viewer copies clips on demand
@@ -77,7 +79,8 @@ Illegal: `unknown → streaming`. Illegal: control commands from an unpaired pee
 
 ## Non-goals
 
-- Cross-internet viewing without a user-owned relay they understand
+- Lookout-operated video relay or "works from anywhere" with no extra app/helper
+- UPnP / raw port-forward as the away-access product path
 - Android / web as Phase 1 clients
 - HomeKit Secure Video
 - Vendor-hosted ML
@@ -90,6 +93,7 @@ Illegal: `unknown → streaming`. Illegal: control commands from an unpaired pee
 - Whether Phase 1.5 TLS blocks the first TestFlight or ships one week later
 - Whether guest-node expiry is Phase 1 or Phase 4
 - App Store vs TestFlight-first for siren/auto-arm wording
+- Whether Tailscale is documented-only or Lookout detects a `100.x` address and offers it on the Node screen
 
 ## Handoff
 

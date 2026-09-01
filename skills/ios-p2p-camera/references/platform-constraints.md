@@ -10,6 +10,10 @@ Read this before promising background cameras, lock-screen push, or Bluetooth vi
 - iCloud Private Relay and most VPNs break LAN Bonjour. Detect a VPN and tell the user to turn it off.
 - Devices must share a broadcast domain. Different VLANs / "IoT network" SSIDs will not see each other.
 - Bluetooth LE is fine for owner-presence and pairing assist. It is not a video fallback.
+- A Node can bind `:8787` on all interfaces and show its LAN IP. That is the away-access primitive. Stock iOS cannot run `cloudflared` / `ngrok` inside Lookout.
+- Tailscale / WireGuard (user-installed) can reach that bind from LTE. Treat Tailscale as a known VPN: do not tell the user to turn it off when they are using it as the tunnel.
+- Other VPNs and iCloud Private Relay still break LAN Bonjour. Say so.
+- Opening a router port with UPnP is not a reliable or acceptable product path (CGNAT, hotel Wi-Fi, open camera).
 
 ## Foreground capture
 
@@ -60,6 +64,6 @@ Local spare-phone cameras are an established category. Rejection risk goes up wh
 
 ## What "no cloud" actually means
 
-- No vendor account, no vendor relay, no vendor ML.
+- No vendor account, no vendor relay, no vendor ML. A user-owned Tailscale/WireGuard overlay is their network, not Lookout SaaS.
 - The phones still use Apple's OS, iCloud backup if the user enabled it (exclude clip directories from backup), and optional APNs if the user opts in.
 - Document that iCloud Photos export is the user's Photos library, not your SaaS.

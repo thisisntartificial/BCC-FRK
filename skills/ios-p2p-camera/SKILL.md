@@ -18,6 +18,7 @@ This skill is the build playbook. Product name: **Lookout**. Bonjour type `_look
 - Adding motion/audio alerts that must work without a vendor cloud
 - Planning multi-node grid view, local recording, or on-device Core ML detection
 - Writing Info.plist local-network / Bonjour / camera permissions for this class of app
+- Exposing a local camera URL and reaching it from LTE through Tailscale or another user-owned tunnel
 
 ## How It Works
 
@@ -60,6 +61,8 @@ Each phase is independently useful. Do not start Phase N+1 until Phase N streams
 | 5 Detection | Person / tripwire / faces / low-light | Core ML on the Node; never send frames off-device |
 | 6 Review | Rolling buffer, timeline, Photos export | Storage lives on the Node (or Viewer if you copy clips over LAN) |
 
+Local IP + user-owned tunnel (away viewing) is Phase 1.5, after the LAN feed works. See [references/reachability.md](references/reachability.md).
+
 Capability contract: [references/capability.md](references/capability.md). Platform limits: [references/platform-constraints.md](references/platform-constraints.md).
 
 ## Architecture Choices
@@ -71,6 +74,7 @@ Capability contract: [references/capability.md](references/capability.md). Platf
 | Encode / decode | VideoToolbox `VTCompressionSession` / `VTDecompressionSession` | ReplayKit, `AVAssetWriter` for live view |
 | Pairing | On-screen PIN + QR, then pinned keys | Trust every `_lookout._tcp` advertiser |
 | Encrypt the stream | TLS with pairing-pinned identity (Phase 1.5) | Raw H.264 on open guest Wi-Fi |
+| Away from home | Same `:8787` via Tailscale / WireGuard / a home helper | Lookout-operated relay, UPnP, ngrok-in-process |
 | WebRTC | Only if you already have a stack and can signal over Bonjour | Google WebRTC + a hosted signaling room as the default |
 
 Phase 1 ships TCP. UDP/RTP is a latency optimization after the happy path works.
@@ -163,6 +167,12 @@ Observe `ProcessInfo.thermalStateDidChangeNotification` and drop to 10 fps / 480
 
 If you exceed 1 s: shrink GOP, cut resolution, disable the preview on the Node, and check you are not writing every frame through `AVAssetWriter`.
 
+### Local IP (show in Phase 1, serve in 1.5)
+
+The Node binds on all interfaces and puts the LAN URL on the status screen (`http://192.168.1.42:8787`). Bonjour TXT may include `http=8787`. Video routes require the pairing token.
+
+Away viewing is that same port through a **user-owned** tunnel (Tailscale on both phones is the default recipe). Lookout does not host the tunnel. Details: [references/reachability.md](references/reachability.md). Example listener: [examples/local-http.swift](examples/local-http.swift).
+
 ## Phase 2+ Hooks (do not build yet)
 
 - **Motion:** downsample to 160-wide gray, absdiff, count pixels over threshold inside polygons. Sensitivity = threshold + min-blob area. Zones are normalized 0…1 rects so they survive orientation change.
@@ -186,7 +196,7 @@ If you exceed 1 s: shrink GOP, cut resolution, disable the preview on the Node, 
 ## Anti-Patterns
 
 - MultipeerConnectivity as the video pipe
-- Sending frames to a vendor cloud "just for signaling"
+- Sending frames to a vendor cloud "just for signaling" or shipping a Lookout relay as the only away path
 - Background silent-audio hacks to keep the camera alive for App Store builds
 - 1080p30 from day one (heat death on an iPhone 11)
 - Trusting LAN membership as authentication

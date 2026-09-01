@@ -17,13 +17,14 @@ Product name: **Lookout**. Bonjour type: `_lookout._tcp`. Do not use Sentinel or
 - VideoToolbox for encode/decode. Do not use `AVAssetWriter` for the live view.
 - Wrap capture, encode, transport, and clock behind small protocols so Swift Testing can run without a device.
 - Phase 1 is discovery + live feed under 1 s. Do not start motion work until that works on two physical phones.
+- The Node shows a local URL (`http://<lan-ip>:8787`). Away viewing is that port through a user-owned tunnel (Tailscale / WireGuard / home helper). Do not build a Lookout relay.
 
 ### 2. Platform honesty
 
 - Camera Node stays in the foreground, plugged in, `isIdleTimerDisabled = true`.
 - Do not promise background capture or lock-screen push without APNs.
 - Do not use silent-audio or VoIP background modes to fake an always-on camera.
-- VPN / Private Relay / AP-isolation must surface as explicit errors.
+- VPN / Private Relay / AP-isolation must surface as explicit errors. Tailscale used as the away tunnel is a known exception.
 
 ### 3. Security
 
