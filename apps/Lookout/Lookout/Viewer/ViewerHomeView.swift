@@ -5,41 +5,46 @@ struct ViewerHomeView: View {
     @State private var controller = ViewerController()
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Button("Change role", action: leave)
-                    .foregroundStyle(.secondary)
+                Button("Roles", action: leave)
+                    .foregroundStyle(LookoutTheme.mute)
                 Spacer()
-                Text(controller.statusLine)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(controller.statusLine.uppercased())
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .tracking(1)
+                    .foregroundStyle(LookoutTheme.brass)
             }
 
-            if let data = controller.latestJPEG, let image = UIImage(data: data) {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFit()
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .frame(maxHeight: 320)
-            } else {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.white.opacity(0.06))
-                    .frame(height: 200)
-                    .overlay {
-                        Text("No feed yet")
-                            .foregroundStyle(.secondary)
-                    }
+            ZStack {
+                LookoutTheme.panel
+                if let data = controller.latestJPEG, let image = UIImage(data: data) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    Text("Waiting for a camera")
+                        .font(.system(.body, design: .serif))
+                        .foregroundStyle(LookoutTheme.mute)
+                }
             }
+            .frame(maxWidth: .infinity)
+            .frame(height: 220)
+            .clipped()
+            .overlay(Rectangle().stroke(LookoutTheme.line, lineWidth: 1))
 
-            TextField("PIN from camera", text: $controller.pin)
+            TextField("PIN", text: $controller.pin)
                 .keyboardType(.numberPad)
-                .textFieldStyle(.roundedBorder)
-                .font(.system(.title3, design: .monospaced))
+                .font(.system(.title2, design: .monospaced))
+                .foregroundStyle(LookoutTheme.paper)
+                .padding(12)
+                .background(LookoutTheme.panel)
+                .overlay(Rectangle().stroke(LookoutTheme.line, lineWidth: 1))
 
             if controller.nodes.isEmpty {
                 Text("No cameras on this Wi-Fi yet. Open Lookout on the spare phone and choose camera.")
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(LookoutTheme.mute)
             } else {
                 ForEach(controller.nodes) { node in
                     Button("Connect to \(node.name)") {
@@ -49,29 +54,33 @@ struct ViewerHomeView: View {
                 }
             }
 
-            DisclosureGroup("Custom URL (your route)") {
+            DisclosureGroup("Custom URL") {
                 TextField("http://100.x.x.x:8787", text: $controller.customURL)
-                    .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
-                SecureField("Token (if required)", text: $controller.customToken)
-                    .textFieldStyle(.roundedBorder)
-                Button("Connect custom URL") {
+                    .font(.system(.body, design: .monospaced))
+                    .padding(10)
+                    .background(LookoutTheme.panel)
+                SecureField("Token", text: $controller.customToken)
+                    .padding(10)
+                    .background(LookoutTheme.panel)
+                Button("Watch custom URL") {
                     controller.connectCustomURL()
                 }
                 .buttonStyle(LookoutSecondaryButton())
             }
-            .padding(.top, 8)
+            .tint(LookoutTheme.brass)
+            .foregroundStyle(LookoutTheme.paper)
 
             if let error = controller.lastError {
                 Text(error)
                     .font(.footnote)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Color(red: 0.83, green: 0.42, blue: 0.29))
             }
             Spacer()
         }
         .padding(24)
-        .background(Color.black.ignoresSafeArea())
+        .background(LookoutTheme.ink.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
         .onAppear { controller.startBrowsing() }
         .onDisappear { controller.stop() }

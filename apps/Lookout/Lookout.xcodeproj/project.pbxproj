@@ -12,6 +12,7 @@
 		AA000003 /* Framing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000003 /* Framing.swift */; };
 		AA000004 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000004 /* Models.swift */; };
 		AA000005 /* LANAddress.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000005 /* LANAddress.swift */; };
+		AA00000F /* LookoutTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000F /* LookoutTheme.swift */; };
 		AA000006 /* NodeStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000006 /* NodeStatusView.swift */; };
 		AA000007 /* NodeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000007 /* NodeController.swift */; };
 		AA000008 /* NodeCapturePipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000008 /* NodeCapturePipeline.swift */; };
@@ -38,6 +39,7 @@
 		AB000003 /* Framing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Framing.swift; sourceTree = "<group>"; };
 		AB000004 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		AB000005 /* LANAddress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LANAddress.swift; sourceTree = "<group>"; };
+		AB00000F /* LookoutTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LookoutTheme.swift; sourceTree = "<group>"; };
 		AB000006 /* NodeStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeStatusView.swift; sourceTree = "<group>"; };
 		AB000007 /* NodeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeController.swift; sourceTree = "<group>"; };
 		AB000008 /* NodeCapturePipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeCapturePipeline.swift; sourceTree = "<group>"; };
@@ -108,6 +110,7 @@
 				AB000003 /* Framing.swift */,
 				AB000004 /* Models.swift */,
 				AB000005 /* LANAddress.swift */,
+				AB00000F /* LookoutTheme.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -253,6 +256,7 @@
 				AA000003 /* Framing.swift in Sources */,
 				AA000004 /* Models.swift in Sources */,
 				AA000005 /* LANAddress.swift in Sources */,
+				AA00000F /* LookoutTheme.swift in Sources */,
 				AA000006 /* NodeStatusView.swift in Sources */,
 				AA000007 /* NodeController.swift in Sources */,
 				AA000008 /* NodeCapturePipeline.swift in Sources */,

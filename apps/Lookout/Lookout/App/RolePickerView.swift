@@ -25,28 +25,36 @@ struct RolePickerView: View {
     }
 
     private var picker: some View {
-        VStack(spacing: 28) {
-            Spacer()
+        VStack(alignment: .leading, spacing: 28) {
             Text("LOOKOUT")
-                .font(.system(size: 34, weight: .bold, design: .monospaced))
-                .tracking(4)
-            Text("Spare iPhone camera. Same Wi-Fi. No account.")
+                .font(.system(size: 13, weight: .bold))
+                .tracking(6)
+                .foregroundStyle(LookoutTheme.brass)
+
+            Text("A spare phone\nbecomes a watch.")
+                .font(.system(size: 34, weight: .regular, design: .serif))
+                .foregroundStyle(LookoutTheme.paper)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text("Same Wi-Fi. No account. Keep the camera plugged in.")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .foregroundStyle(LookoutTheme.mute)
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("ROOM NAME")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text("ROOM")
+                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .tracking(2)
+                    .foregroundStyle(LookoutTheme.brass.opacity(0.7))
                 TextField("Kitchen", text: $roomName)
-                    .textFieldStyle(.roundedBorder)
+                    .font(.system(.title3, design: .monospaced))
+                    .foregroundStyle(LookoutTheme.paper)
+                    .padding(12)
+                    .background(LookoutTheme.panel)
+                    .overlay(Rectangle().stroke(LookoutTheme.line, lineWidth: 1))
                     .textInputAutocapitalization(.words)
             }
-            .padding(.horizontal, 32)
 
-            VStack(spacing: 12) {
+            VStack(spacing: 10) {
                 Button("This phone is the camera") {
                     saveRoom()
                     role = .camera
@@ -59,41 +67,16 @@ struct RolePickerView: View {
                 }
                 .buttonStyle(LookoutSecondaryButton())
             }
-            .padding(.horizontal, 32)
             Spacer()
         }
-        .background(Color.black.ignoresSafeArea())
+        .padding(28)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(LookoutTheme.ink.ignoresSafeArea())
     }
 
     private func saveRoom() {
         let trimmed = roomName.trimmingCharacters(in: .whitespacesAndNewlines)
         roomName = trimmed.isEmpty ? "Kitchen" : trimmed
         UserDefaults.standard.set(roomName, forKey: LookoutDefaults.roomNameKey)
-    }
-}
-
-struct LookoutPrimaryButton: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.headline)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.white)
-            .foregroundStyle(Color.black)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .opacity(configuration.isPressed ? 0.7 : 1)
-    }
-}
-
-struct LookoutSecondaryButton: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.headline)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.white.opacity(0.08))
-            .foregroundStyle(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .opacity(configuration.isPressed ? 0.7 : 1)
     }
 }
