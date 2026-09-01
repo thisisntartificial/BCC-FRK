@@ -27,14 +27,18 @@ class FrequencyAnalyzer extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'FREQUENCY ANALYSIS',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 10,
-                  letterSpacing: 2,
+              const Flexible(
+                child: Text(
+                  'FREQUENCY ANALYSIS',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 10,
+                    letterSpacing: 2,
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               Text(
                 '${dominantFrequency.toStringAsFixed(0)} Hz',
                 style: const TextStyle(
@@ -54,7 +58,7 @@ class FrequencyAnalyzer extends StatelessWidget {
                 child: Column(
                   children: [
                     Container(
-                      width: 30,
+                      width: 26,
                       height: 60,
                       decoration: BoxDecoration(
                         color: isActive
@@ -82,15 +86,21 @@ class FrequencyAnalyzer extends StatelessWidget {
                           : null,
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      entry.key,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: isActive
-                            ? AppColors.primary
-                            : AppColors.textSecondary,
-                        fontSize: 9,
-                        height: 1.1,
+                    // Labels such as "Brilliance" are single unbreakable words
+                    // that exceed a narrow column, so scale them down to fit
+                    // rather than letting the row overflow.
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        entry.key,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: isActive
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
+                          fontSize: 9,
+                          height: 1.1,
+                        ),
                       ),
                     ),
                   ],

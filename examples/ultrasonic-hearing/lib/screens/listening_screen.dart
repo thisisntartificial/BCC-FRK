@@ -214,16 +214,20 @@ class _ListeningScreenState extends State<ListeningScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'ULTRASONIC HEARING',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      letterSpacing: 2,
+                  const Flexible(
+                    child: Text(
+                      'ULTRASONIC HEARING',
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        letterSpacing: 2,
+                      ),
                     ),
                   ),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -306,7 +310,7 @@ class _ListeningScreenState extends State<ListeningScreen> {
                         ],
                       ),
                     )
-                  : Center(
+                  : SingleChildScrollView(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -362,7 +366,6 @@ class _ListeningScreenState extends State<ListeningScreen> {
       child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildDetailItem(
                 'Peak Level',
@@ -380,7 +383,6 @@ class _ListeningScreenState extends State<ListeningScreen> {
           ),
           const SizedBox(height: 12),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildDetailItem(
                 'Dominant Freq',
@@ -402,26 +404,33 @@ class _ListeningScreenState extends State<ListeningScreen> {
   }
 
   Widget _buildDetailItem(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 10,
-            letterSpacing: 1,
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 10,
+              letterSpacing: 1,
+            ),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -456,24 +465,33 @@ class _ListeningScreenState extends State<ListeningScreen> {
                 color: AppColors.textSecondary,
                 size: 20,
               ),
-              Text(
-                '${_amplification.toStringAsFixed(1)}x',
-                style: const TextStyle(
-                  color: AppColors.primary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+              const SizedBox(width: 4),
+              SizedBox(
+                width: 38,
+                child: Text(
+                  '${_amplification.toStringAsFixed(1)}x',
+                  textAlign: TextAlign.end,
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Noise Gate',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
+              const Flexible(
+                child: Text(
+                  'Noise Gate',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
                 ),
               ),
               Switch(
@@ -485,20 +503,23 @@ class _ListeningScreenState extends State<ListeningScreen> {
           ),
           const SizedBox(height: 12),
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildControlButton(
-                icon: _isRecording ? Icons.stop : Icons.fiber_manual_record,
-                label: _isRecording ? 'STOP REC' : 'RECORD',
-                color: _isRecording ? AppColors.danger : AppColors.warning,
-                onPressed: _toggleRecording,
+              Expanded(
+                child: _buildControlButton(
+                  icon: _isRecording ? Icons.stop : Icons.fiber_manual_record,
+                  label: _isRecording ? 'STOP REC' : 'RECORD',
+                  color: _isRecording ? AppColors.danger : AppColors.warning,
+                  onPressed: _toggleRecording,
+                ),
               ),
-              const SizedBox(width: 20),
-              _buildControlButton(
-                icon: _isListening ? Icons.stop : Icons.hearing,
-                label: _isListening ? 'STOP' : 'LISTEN',
-                color: _isListening ? AppColors.danger : AppColors.primary,
-                onPressed: _toggleListening,
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildControlButton(
+                  icon: _isListening ? Icons.stop : Icons.hearing,
+                  label: _isListening ? 'STOP' : 'LISTEN',
+                  color: _isListening ? AppColors.danger : AppColors.primary,
+                  onPressed: _toggleListening,
+                ),
               ),
             ],
           ),
@@ -516,11 +537,11 @@ class _ListeningScreenState extends State<ListeningScreen> {
     return ElevatedButton.icon(
       onPressed: onPressed,
       icon: Icon(icon, size: 20),
-      label: Text(label),
+      label: Text(label, overflow: TextOverflow.ellipsis),
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
         foregroundColor: AppColors.background,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     );
   }
