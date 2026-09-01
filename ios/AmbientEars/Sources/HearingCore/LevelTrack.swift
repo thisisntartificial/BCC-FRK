@@ -99,7 +99,8 @@ public struct LevelTrackBuilder {
         LevelTrack(hopDuration: hopDuration, levelsDBFS: levels)
     }
 
-    static func decibels(rmsOf samples: ArraySlice<Float>) -> Float {
+    /// Loudness of a block of samples in dBFS.
+    public static func decibels(rmsOf samples: ArraySlice<Float>) -> Float {
         guard !samples.isEmpty else { return LevelTrack.silenceDBFS }
 
         var sumOfSquares: Double = 0

@@ -1,0 +1,63 @@
+name: AmbientEars
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+packages:
+  HearingCore:
+    path: .
+
+targets:
+  AmbientEars:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+    dependencies:
+      - package: HearingCore
+        product: HearingCore
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Ambient Ears
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        NSMicrophoneUsageDescription: >-
+          Ambient Ears uses the microphone to record ambient sound and to
+          amplify it into your headphones.
+        UIBackgroundModes:
+          - audio
+    settings:
+      base:
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_VERSION: "5.9"
+        GENERATE_INFOPLIST_FILE: NO
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.AmbientEars
+
+  AmbientEarsTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: AppTests
+    dependencies:
+      - target: AmbientEars
+      - package: HearingCore
+        product: HearingCore
+    settings:
+      base:
+        SWIFT_VERSION: "5.9"
+
+schemes:
+  AmbientEars:
+    build:
+      targets:
+        AmbientEars: all
+        AmbientEarsTests: [test]
+    test:
+      targets:
+        - AmbientEarsTests
