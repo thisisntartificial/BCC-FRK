@@ -9,7 +9,8 @@ Read this before promising background cameras, lock-screen push, or Bluetooth vi
 - Guest Wi-Fi **client isolation** and many mesh "AP isolation" modes block device-to-device TCP. Symptom: browse may still see names, connect hangs.
 - iCloud Private Relay and most VPNs break LAN Bonjour. Detect a VPN and tell the user to turn it off.
 - Devices must share a broadcast domain. Different VLANs / "IoT network" SSIDs will not see each other.
-- Bluetooth LE is fine for owner-presence and pairing assist. It is not a video fallback.
+- Bluetooth LE is fine for pairing, owner-presence, and control. It is not a live H.264 path. Snapshot fallback only; say so in the UI.
+- Phone-to-phone live video without a router is AWDL (`includePeerToPeer`), which is still Wi-Fi.
 - A Node can bind `:8787` on all interfaces and show its LAN IP. That is the away-access primitive. Stock iOS cannot run `cloudflared` / `ngrok` inside Lookout.
 - Tailscale / WireGuard (user-installed) can reach that bind from LTE. Treat Tailscale as a known VPN: do not tell the user to turn it off when they are using it as the tunnel.
 - Other VPNs and iCloud Private Relay still break LAN Bonjour. Say so.

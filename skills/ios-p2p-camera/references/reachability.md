@@ -1,84 +1,98 @@
-# Local IP and tunnels
+# How you watch: Wi-Fi, Bluetooth, web
 
-Lookout stays a local camera. Off-LAN viewing is the same local server reached through a **user-owned** tunnel. Lookout does not run a relay, account, or subscription for this.
+Three ways to see a Lookout node. Launch is **free**. A paid web tier can come later. Do not put a paywall on Phase 1.
 
-## What the Node puts up
+| Path | When | Launch | Later |
+|------|------|--------|-------|
+| **Wi-Fi** | Same LAN, or phone-to-phone Wi-Fi (AWDL / `includePeerToPeer`) | Free live H.264 | Stays free |
+| **Bluetooth** | Nearby, no usable Wi-Fi | Free. Pairing, presence, control. Snapshots or a crawl-speed preview — not full live video | Stays free |
+| **Web** | Browser or away-from-home URL | Free if you ship it: raw LAN URL on the Node | Paid. Pretty address (`https://kitchen.lookout.app` or similar), not `192.168.1.42:8787` |
 
-The Camera Node binds a listener on all interfaces and shows the address on its status screen:
+Core promise that never goes paid: two phones, same room or same Wi-Fi, live feed.
 
-```text
-Kitchen
-http://192.168.1.42:8787
-token required
-```
+## Launch: free, address goes up in a block
 
-Same process, two ways in:
-
-| Path | Who uses it | Address |
-|------|-------------|---------|
-| Bonjour + framed TCP | Lookout Viewer on the LAN | `_lookout._tcp` |
-| Local HTTP | Browser, second phone, Home Assistant, tunnel | `http://<lan-ip>:8787` |
-
-Advertise the HTTP port in Bonjour TXT (`http=8787`) so the Viewer can offer "Open URL" without guessing.
-
-### HTTP surface (keep it tiny)
-
-| Route | Body | Notes |
-|-------|------|-------|
-| `GET /health` | `{"room":"Kitchen","armed":false}` | No video |
-| `GET /snap` | JPEG | Pairing token; good for alerts and HA |
-| `GET /live` | MJPEG or fMP4 | Pairing token; browser-friendly |
-| `GET /` | One-page player | Loads `/live` after token |
-
-Do not ship an open webcam on the LAN. Every video route checks the pairing token (header `X-Lookout-Token` or a short-lived query). The token is created at PIN pair, not printed in Bonjour TXT.
-
-Phase 1 can show the LAN IP even before `/live` exists. Phase 1.5 ships `/health` + `/snap` + `/live`.
-
-## "Anywhere" is the tunnel, not Lookout
+When the Node is live, the status screen shows a single **address block** — large, copyable, high contrast:
 
 ```text
-Home                           Away
-Node :8787 ── LAN ── Viewer    Viewer on cellular
-      │
-      └── user tunnel ───────── same :8787 on overlay IP
+LOOKOUT · KITCHEN
+192.168.1.42:8787
+Wi-Fi · live
 ```
 
-The Node does not know it is "on the internet." It only binds `:8787`. Whatever overlay reaches that bind (Tailscale, WireGuard, a Pi subnet router) is the user's.
+"The camera is up" means that block is on screen. The Viewer can type it, tap it from Bonjour, or scan a QR of it. No account.
 
-### Pick a tunnel (in this order)
+Do not hide the address behind a paywall or an account wall at launch.
 
-| Option | How | Why |
-|--------|-----|-----|
-| **Tailscale on both phones** | User installs Tailscale, same tailnet. Lookout is `http://100.x.x.x:8787` or MagicDNS `kitchen.tailnet.ts.net:8787` | Best stock-iOS path. No Lookout servers. No router ports. |
-| **WireGuard profile** | User or a home server issues a peer. Lookout listens; Viewer joins the WG net | Same idea, more setup |
-| **Home helper** (Mac / Pi) | Helper runs Tailscale subnet router or `cloudflared` to `192.168.1.42:8787` | When you do not want Tailscale on the spare phone |
-| Lookout-hosted relay | You terminate video in your cloud | Reject as the default. That is Manything. |
+## Later: web goes paid, address gets pretty
 
-Do not use UPnP / "open port 8787 on the router" as the product path. It fights CGNAT, hotel Wi-Fi, and the security story.
+When you turn on billing, only **web / away** is the paid surface.
 
-### What stock iOS will not do
+- Wi-Fi app-to-app stays free.
+- Bluetooth nearby stays free.
+- `https://<room>.lookout.app` (or one pretty path per house) is the paid thing: browser on a laptop, LTE without Tailscale, share-a-link.
 
-- Run `cloudflared` or `ngrok` as a child process inside Lookout
-- Keep `:8787` alive after the Node is suspended (the lamp rule still holds)
-- Punch out of a double-NAT without an overlay
-- Make Tailscale unnecessary if the user wants "open this on LTE with zero extra apps" — that requires *someone's* relay. If you add one later, it is an explicit opt-in product, not the core loop.
+The pretty address is a name, not an IP. Same token, same Node bind. Lookout's paid job is the stable name + relay/tunnel so the browser does not need `192.168.x.x`.
 
-## Viewer behavior
+Until that ships, do not promise pretty URLs. Show the LAN block only.
 
-1. On the LAN: Bonjour first. Fall back to typed `http://192.168.x.x:8787`.
-2. Off LAN: connect to the saved overlay URL (Tailscale IP / MagicDNS / helper hostname). Same token.
-3. If both fail, say which: "No local camera" vs "Tunnel offline" vs "Token rejected."
-4. Treat Tailscale as a *known* VPN. Do not show the generic "turn off your VPN" error when the only VPN is the tunnel you asked them to install. Other VPNs / Private Relay still break LAN Bonjour.
+Price is unset. Do not invent a number in the app. The rule is: **free now, web can go up later.**
 
-## Security
+## Wi-Fi (default, free)
 
-- Binding on `0.0.0.0` means guest Wi-Fi neighbors can hit `:8787`. Token + TLS (Phase 1.5) are required before you tell anyone to tunnel.
-- Prefer HTTPS with the pairing-pinned cert once the tunnel exists. HTTP-on-LAN is a demo only.
-- A public Cloudflare Quick Tunnel URL without a token is an open camera. Never generate one inside the app.
-- Rate-limit `/snap` and `/live`. One stream per token is enough for v1.
+Bonjour `_lookout._tcp` + framed TCP, and the `:8787` HTTP bind for browsers on the LAN.
 
-## Product copy
+`NWParameters.includePeerToPeer = true` so two phones can still connect when there is no router (AWDL). That is still Wi-Fi, not Bluetooth, and it is the right "we're in the same room with no network" path for live video.
 
-- Node: "This camera is at `http://192.168.1.42:8787`. Same Wi-Fi works now. For away-from-home, put both phones on the same Tailscale network."
-- Settings: a "Away access" card with three states — Off (LAN only), Tailscale detected (`100.x` shown), Custom URL (user pastes helper hostname).
-- Do not promise "works from anywhere" on the App Store without saying a user-owned tunnel is required.
+Token on every video route. Advertise `http=8787` in Bonjour TXT.
+
+## Bluetooth (nearby, free, limited)
+
+Use Bluetooth for what radios allow on stock iOS:
+
+| Job | Use |
+|-----|-----|
+| Find / pair when Wi-Fi isolation is on | BLE advertise + PIN/QR |
+| Owner is in the room (auto-disarm) | BLE beacon from the Viewer |
+| Control (arm, stop siren) if TCP is down | Small BLE / Multipeer control messages |
+| Live 720p15 | **No.** BLE cannot carry it. Multipeer-over-Bluetooth is a slideshow |
+
+If you offer a Bluetooth "preview," it is JPEG snapshots on a slow interval. UI must say so. Do not market Bluetooth as a third full-quality camera pipe.
+
+## Web (browser / away)
+
+### Launch (free, if present)
+
+Same `:8787` on the LAN. Safari on a Mac on that Wi-Fi. Token required. Ugly address is fine.
+
+User-owned Tailscale to that port can exist as a power-user note. Still free, still not a Lookout account.
+
+### Paid (later)
+
+| Paid web includes | Still free |
+|-------------------|------------|
+| Pretty address | Lookout Viewer on Wi-Fi |
+| Lookout-operated name + tunnel so LTE/browser works with no extra VPN app | Bluetooth nearby |
+| Optional share link with expiry | LAN `192.168.x.x` block on the Node |
+
+Do not flip this on in Phase 1. When you do, gate **only** the pretty/public URL and the hosted relay. Do not brick LAN viewing for people who never pay.
+
+A public URL without a token is an open camera. Never ship that.
+
+## Viewer order
+
+1. Bonjour on Wi-Fi / AWDL  
+2. Typed or scanned address from the Node block  
+3. Bluetooth control + snapshot fallback  
+4. Later, if entitled: pretty web URL  
+
+Errors must name the path: "No Wi-Fi camera" vs "Bluetooth only — snapshots" vs "Web address needs Lookout+" vs "Token rejected."
+
+## What not to do
+
+- Paywall the first two-phone demo  
+- Charge for Bluetooth  
+- Call BLE a live stream  
+- UPnP / open router ports as the pretty-address implementation  
+- Put `cloudflared` inside the iOS app  
+- Keep the Node serving after iOS suspends it — paid web does not fix the lamp rule  

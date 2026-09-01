@@ -6,7 +6,7 @@ origin: ECC
 
 # iOS Peer-to-Peer Camera
 
-Turn spare iPhones into local camera nodes. One app, two roles (Camera Node and Viewer). Devices find each other with Bonjour on the same Wi-Fi, stream H.264 over Network.framework, and keep media on-device. Stock iOS only — no jailbreak, no required cloud, no subscription.
+Turn spare iPhones into local camera nodes. One app, two roles (Camera Node and Viewer). Devices find each other with Bonjour on the same Wi-Fi, stream H.264 over Network.framework, and keep media on-device. Stock iOS only — no jailbreak. Launch is free; a pretty web address can go paid later.
 
 This skill is the build playbook. Product name: **Lookout**. Bonjour type `_lookout._tcp`. A louder trap face (Boobytrap) may split later on the same system — do not build it in Phase 1. Do not use Sentinel or SentinalCam.
 
@@ -74,7 +74,8 @@ Capability contract: [references/capability.md](references/capability.md). Platf
 | Encode / decode | VideoToolbox `VTCompressionSession` / `VTDecompressionSession` | ReplayKit, `AVAssetWriter` for live view |
 | Pairing | On-screen PIN + QR, then pinned keys | Trust every `_lookout._tcp` advertiser |
 | Encrypt the stream | TLS with pairing-pinned identity (Phase 1.5) | Raw H.264 on open guest Wi-Fi |
-| Away from home | Same `:8787` via Tailscale / WireGuard / a home helper | Lookout-operated relay, UPnP, ngrok-in-process |
+| Nearby, no Wi-Fi | BLE pair/control + snapshots; AWDL (`includePeerToPeer`) for real video | Bluetooth as a full H.264 pipe |
+| Web / away | Free at launch if shipped (LAN URL). Later: paid pretty address | Paywall on LAN viewing; open unauthenticated URL |
 | WebRTC | Only if you already have a stack and can signal over Bonjour | Google WebRTC + a hosted signaling room as the default |
 
 Phase 1 ships TCP. UDP/RTP is a latency optimization after the happy path works.
@@ -169,9 +170,9 @@ If you exceed 1 s: shrink GOP, cut resolution, disable the preview on the Node, 
 
 ### Local IP (show in Phase 1, serve in 1.5)
 
-The Node binds on all interfaces and puts the LAN URL on the status screen (`http://192.168.1.42:8787`). Bonjour TXT may include `http=8787`. Video routes require the pairing token.
+When the Node is live, the status screen shows a large **address block** (`192.168.1.42:8787`). Bonjour TXT may include `http=8787`. Video routes require the pairing token.
 
-Away viewing is that same port through a **user-owned** tunnel (Tailscale on both phones is the default recipe). Lookout does not host the tunnel. Details: [references/reachability.md](references/reachability.md). Example listener: [examples/local-http.swift](examples/local-http.swift).
+Launch is free: Wi-Fi (and AWDL) for live video, Bluetooth for nearby pair/control/snapshots. Web can exist as that same LAN URL. Later, web can go paid and get a pretty address (`kitchen.lookout.app`). Do not paywall Phase 1. Details: [references/reachability.md](references/reachability.md). Example listener: [examples/local-http.swift](examples/local-http.swift).
 
 ## Phase 2+ Hooks (do not build yet)
 

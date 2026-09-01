@@ -16,7 +16,9 @@ A single iOS app lets a spare iPhone act as a wireless camera and a primary iPho
 ## Constraints
 
 - Stock iOS only. No jailbreak, no private API as a required path.
-- No vendor cloud and no subscription required for the core loop.
+- No vendor cloud and no subscription required for the core loop. Launch is free.
+- Wi-Fi (and AWDL) live video stays free. Bluetooth nearby stays free.
+- Web / pretty public address may become paid later. Never paywall LAN viewing.
 - One binary, two roles.
 - Camera Node must remain in the foreground and preferably plugged in.
 - Viewer lock-screen push is **not** a Phase 1–3 promise (APNs is Apple cloud and optional).
@@ -25,7 +27,7 @@ A single iOS app lets a spare iPhone act as a wireless camera and a primary iPho
 - Do not hide security features to obtain App Store review.
 - Visible LIVE / recording indicator in the Node UI.
 - Frames never leave the device except over a paired connection (LAN, or the same local port via a user-owned tunnel).
-- Away viewing is optional. Default is LAN. Tunnel is the user's Tailscale / WireGuard / home helper, not a Lookout account.
+- Away / browser viewing is optional. At launch, the Node shows a local address block. A pretty hosted URL is a later paid surface.
 
 ## Actors and surfaces
 
@@ -79,7 +81,8 @@ Illegal: `unknown → streaming`. Illegal: control commands from an unpaired pee
 
 ## Non-goals
 
-- Lookout-operated video relay or "works from anywhere" with no extra app/helper
+- Paywall on Wi-Fi or Bluetooth viewing
+- Lookout-operated pretty URL / relay in Phase 1 (that is the later paid web tier)
 - UPnP / raw port-forward as the away-access product path
 - Android / web as Phase 1 clients
 - HomeKit Secure Video

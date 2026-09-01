@@ -52,8 +52,9 @@ True lock-screen push when the Viewer is killed requires APNs. Treat that as an 
 
 ### Power-user hooks (keep out of the default path)
 
-- **Local HTTP on the Node** (`/health`, `/snap`, `/live` at `http://<lan-ip>:8787`) so a browser or NVR can watch without the Lookout Viewer.
-- **User-owned tunnel** (Tailscale first, then WireGuard or a home Pi/Mac helper) so the Viewer can hit that same port from LTE. Not a Lookout relay.
+- **Address block on the Node** when the camera is up — large, copyable `ip:port`.
+- **Local HTTP on the Node** (`/health`, `/snap`, `/live`) so a LAN browser can watch. Free at launch.
+- **Pretty web address** (`https://kitchen.lookout.app`) as the later paid away/browser tier. Do not ship or paywall this in Phase 1.
 - **RTSP publisher on the Node** so Home Assistant / Frigate / an NVR can ingest. Local only.
 - **MQTT state** (`armed`, `battery`, `motion`) on the LAN.
 - **Laptop viewer** via the Node URL, or a page the Viewer serves after it already has the stream.

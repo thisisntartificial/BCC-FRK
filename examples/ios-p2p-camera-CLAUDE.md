@@ -17,7 +17,9 @@ Product name: **Lookout**. Bonjour type: `_lookout._tcp`. Do not use Sentinel or
 - VideoToolbox for encode/decode. Do not use `AVAssetWriter` for the live view.
 - Wrap capture, encode, transport, and clock behind small protocols so Swift Testing can run without a device.
 - Phase 1 is discovery + live feed under 1 s. Do not start motion work until that works on two physical phones.
-- The Node shows a local URL (`http://<lan-ip>:8787`). Away viewing is that port through a user-owned tunnel (Tailscale / WireGuard / home helper). Do not build a Lookout relay.
+- Launch is free. The Node shows a large local address block when it is live.
+- Wi-Fi / AWDL = live video. Bluetooth = pair, control, snapshots — not full live video.
+- Do not paywall Phase 1. A pretty web address (`room.lookout.app`) is a later paid tier only.
 
 ### 2. Platform honesty
 
