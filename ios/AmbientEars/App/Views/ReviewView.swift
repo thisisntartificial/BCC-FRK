@@ -228,18 +228,20 @@ struct ActivityTimeline: View {
                     .frame(width: 2)
                     .offset(x: offset(for: position, in: width))
             }
-            .contentShape(Rectangle())
+                .contentShape(Rectangle())
             .gesture(
                 DragGesture(minimumDistance: 0).onEnded { value in
-                    guard duration > 0, width > 0 else { return }
-                    onScrub(Double(value.location.x / width) * duration)
+                    guard width > 0 else { return }
+                    onScrub(TimelineGeometry.time(
+                        atFraction: Double(value.location.x / width),
+                        duration: duration
+                    ))
                 }
             )
         }
     }
 
     private func offset(for time: TimeInterval, in width: CGFloat) -> CGFloat {
-        guard duration > 0 else { return 0 }
-        return CGFloat(time / duration) * width
+        CGFloat(TimelineGeometry.fraction(of: time, duration: duration)) * width
     }
 }

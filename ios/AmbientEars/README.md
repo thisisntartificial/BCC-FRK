@@ -78,7 +78,7 @@ including Linux:
 ```bash
 cd ios/AmbientEars
 swift build
-swift test          # 40 tests
+swift test          # 77 tests
 ```
 
 The iOS app needs a Mac. The Xcode project is generated rather than committed,
@@ -123,8 +123,14 @@ device to capture others' conversations often is not.
 
 | Component | Status |
 |---|---|
-| `HearingCore` | Compiled and tested — 40 tests under Swift 6.0.3 |
+| `HearingCore` | Compiled and tested — 77 tests under Swift 6.0.3 |
 | `App/` | Written but not compiled; needs Xcode on a Mac |
 
 The AVFoundation and SwiftUI layers have not been through a compiler. Expect to
 fix small API details on first build.
+
+Logic was deliberately pushed down into the core wherever it did not need
+audio hardware — rate resolution, event navigation, gain conversion, timeline
+geometry and formatting all sit there rather than beside the views. What is
+left in `App/` is mostly AVAudioEngine wiring and SwiftUI layout, which is the
+part a compiler and a device have to judge anyway.

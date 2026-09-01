@@ -25,9 +25,7 @@ final class LiveMonitor: ObservableObject {
 
     /// Ceiling is set by what the gain stage can deliver: `AVAudioUnitEQ`
     /// tops out at +24 dB, which is a little under 16x.
-    static let gainRange: ClosedRange<Float> = 1 ... 15
-
-    private static let maximumGainDB: Float = 24
+    static let gainRange = GainStage.supportedRange
 
     private let engine = AVAudioEngine()
 
@@ -110,9 +108,6 @@ final class LiveMonitor: ObservableObject {
     }
 
     private func applyGain() {
-        let clamped = min(max(gain, LiveMonitor.gainRange.lowerBound),
-                          LiveMonitor.gainRange.upperBound)
-        let decibels = 20 * log10(clamped)
-        amplifier.globalGain = min(decibels, LiveMonitor.maximumGainDB)
+        amplifier.globalGain = GainStage.decibels(forMultiplier: gain)
     }
 }

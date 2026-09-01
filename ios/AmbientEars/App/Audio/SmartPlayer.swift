@@ -131,16 +131,21 @@ final class SmartPlayer: ObservableObject {
 
     /// Jumps to shortly before the next audible event.
     func skipToNextEvent() {
-        guard let next = events.first(where: { $0.start > currentTime + 0.25 }) else { return }
-        seek(to: max(0, next.start - config.lookahead))
+        guard let target = EventNavigator.nextTarget(
+            after: currentTime,
+            in: events,
+            lookahead: config.lookahead
+        ) else { return }
+
+        seek(to: target)
     }
 
     func skipToPreviousEvent() {
-        guard let previous = events.last(where: { $0.start < currentTime - 1.0 }) else {
-            seek(to: 0)
-            return
-        }
-        seek(to: max(0, previous.start - config.lookahead))
+        seek(to: EventNavigator.previousTarget(
+            before: currentTime,
+            in: events,
+            lookahead: config.lookahead
+        ))
     }
 
     private func rebuildPlan() {
@@ -183,20 +188,13 @@ final class SmartPlayer: ObservableObject {
     }
 
     private func refreshRate() {
-        let rate: Float
-        if isSmartModeEnabled, let plan {
-            // Manual rate scales the whole plan, so a user who prefers a
-            // gentler skim still benefits from slowing down at each event.
-            rate = plan.rate(at: currentTime) * manualRate
-        } else {
-            rate = manualRate
-        }
-
-        let clamped = min(
-            max(rate, PlaybackPlanConfig.supportedRateRange.lowerBound),
-            PlaybackPlanConfig.supportedRateRange.upperBound
+        let rate = RateResolver.resolve(
+            planned: plan?.rate(at: currentTime),
+            manualRate: manualRate,
+            isSmartModeEnabled: isSmartModeEnabled
         )
-        timePitch.rate = clamped
-        currentRate = clamped
+
+        timePitch.rate = rate
+        currentRate = rate
     }
 }

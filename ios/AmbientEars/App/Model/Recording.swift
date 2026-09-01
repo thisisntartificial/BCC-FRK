@@ -9,26 +9,27 @@ struct Recording: Identifiable, Equatable {
     let duration: TimeInterval
     let levelTrack: LevelTrack
 
+    /// Segmentation is done once, at init. It is O(n log n) over the whole
+    /// envelope, and SwiftUI reads these on every render — recomputing there
+    /// would stall the interface on a recording of any length.
+    let segments: [ActivitySegment]
+    let events: [ActivitySegment]
+
     init(
         id: UUID = UUID(),
         url: URL,
         startedAt: Date,
         duration: TimeInterval,
-        levelTrack: LevelTrack
+        levelTrack: LevelTrack,
+        detector: ActivityDetector = ActivityDetector()
     ) {
         self.id = id
         self.url = url
         self.startedAt = startedAt
         self.duration = duration
         self.levelTrack = levelTrack
-    }
-
-    var segments: [ActivitySegment] {
-        ActivityDetector().segments(for: levelTrack)
-    }
-
-    var events: [ActivitySegment] {
-        segments.filter(\.isActive)
+        self.segments = detector.segments(for: levelTrack)
+        self.events = segments.filter(\.isActive)
     }
 
     func plan(with config: PlaybackPlanConfig) -> PlaybackPlan {
