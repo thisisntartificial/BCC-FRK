@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lookout</title>
+  <style>
+    :root {
+      --ink: #0c0b09;
+      --panel: #16130f;
+      --line: #3a3226;
+      --brass: #e4c27a;
+      --brass-dim: #8a7040;
+      --paper: #f3e6c4;
+      --mute: #9a8f7a;
+      --live: #d8a13a;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(1200px 600px at 50% -10%, #2a2218 0%, transparent 55%),
+        var(--ink);
+      color: var(--paper);
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+    }
+    .shell {
+      min-height: 100%;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 28px 20px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+    header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .mark {
+      font-size: 13px;
+      letter-spacing: 0.46em;
+      text-indent: 0.46em;
+      font-weight: 700;
+      color: var(--brass);
+    }
+    .live {
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      color: var(--ink);
+      background: var(--brass);
+      padding: 5px 9px 4px;
+      border-radius: 999px;
+    }
+    .live::before {
+      content: "";
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      margin-right: 7px;
+      border-radius: 50%;
+      background: #1b1204;
+      box-shadow: 0 0 0 3px rgba(27, 18, 4, 0.15);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      50% { opacity: 0.35; }
+    }
+    .finder {
+      position: relative;
+      background: #070605;
+      border: 1px solid var(--line);
+      box-shadow: 0 40px 90px rgba(0, 0, 0, 0.45);
+      overflow: hidden;
+    }
+    .finder img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      filter: saturate(0.85) contrast(1.08);
+    }
+    .finder::before,
+    .finder::after {
+      content: "";
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border-color: var(--brass);
+      border-style: solid;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .finder::before {
+      top: 14px;
+      left: 14px;
+      border-width: 2px 0 0 2px;
+    }
+    .finder::after {
+      right: 14px;
+      bottom: 14px;
+      border-width: 0 2px 2px 0;
+    }
+    .hud {
+      position: absolute;
+      inset: auto 18px 16px 18px;
+      display: flex;
+      justify-content: space-between;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      color: var(--brass);
+      text-shadow: 0 1px 8px #000;
+      pointer-events: none;
+    }
+    .plaque {
+      background: linear-gradient(180deg, #1d1914 0%, #12100c 100%);
+      border: 1px solid var(--line);
+      padding: 22px 22px 18px;
+    }
+    .plaque small {
+      display: block;
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 10px;
+      letter-spacing: 0.28em;
+      color: var(--brass-dim);
+      margin-bottom: 8px;
+    }
+    .plaque strong {
+      display: block;
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: clamp(1.15rem, 3vw, 1.7rem);
+      letter-spacing: 0.04em;
+      color: var(--paper);
+    }
+    .plaque em {
+      display: block;
+      margin-top: 8px;
+      font-style: normal;
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      color: var(--brass);
+    }
+    form {
+      display: grid;
+      grid-template-columns: 1fr 160px auto auto;
+      gap: 10px;
+    }
+    @media (max-width: 720px) {
+      form { grid-template-columns: 1fr 1fr; }
+      button { grid-column: span 1; }
+    }
+    input, button {
+      font: inherit;
+      border-radius: 0;
+    }
+    input {
+      background: #100e0b;
+      border: 1px solid var(--line);
+      color: var(--paper);
+      padding: 12px 12px;
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 13px;
+    }
+    input:focus {
+      outline: 1px solid var(--brass-dim);
+    }
+    button {
+      border: 1px solid var(--brass);
+      background: var(--brass);
+      color: var(--ink);
+      padding: 12px 14px;
+      letter-spacing: 0.08em;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button.ghost {
+      background: transparent;
+      color: var(--brass);
+    }
+    p.note, #err {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 13px;
+      color: var(--mute);
+    }
+    #err { color: #d36a4a; min-height: 1.2em; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="mark">LOOKOUT</div>
+      <div class="live" id="live">LIVE</div>
+    </header>
+
+    <section class="finder">
+      <img id="frame" alt="Lookout feed">
+      <div class="hud">
+        <span id="hud-room">COMPUTER</span>
+        <span id="hud-state">DEMO</span>
+      </div>
+    </section>
+
+    <section class="plaque">
+      <small>ADDRESS</small>
+      <strong id="block-line">127.0.0.1:8788</strong>
+      <em id="block-meta">Wi-Fi · this machine</em>
+    </section>
+
+    <form id="form">
+      <input id="url" placeholder="http://192.168.1.42:8787" autocomplete="off" spellcheck="false">
+      <input id="token" placeholder="Token" autocomplete="off" spellcheck="false">
+      <button class="go" type="submit">Watch URL</button>
+      <button class="ghost" type="button" id="demo">This computer</button>
+    </form>
+    <p class="note">Viewer for a spare-phone camera. Paste a Lookout address, or watch the demo node on this machine.</p>
+    <div id="err"></div>
+  </div>
+  <script>
+    const frame = document.getElementById('frame');
+    const err = document.getElementById('err');
+    let timer = null;
+    let objectUrl = null;
+
+    function setPlaque(room, line, meta) {
+      document.getElementById('hud-room').textContent = room;
+      document.getElementById('hud-state').textContent = meta.split('·')[0].trim().toUpperCase();
+      document.getElementById('block-line').textContent = line;
+      document.getElementById('block-meta').textContent = meta;
+    }
+
+    function snapUrl(base, token) {
+      const root = base.replace(/\/$/, '');
+      const url = new URL(root.includes('/snap') ? root : root + '/snap');
+      if (token) url.searchParams.set('token', token);
+      return url.toString();
+    }
+
+    async function pull(url) {
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) throw new Error(response.status === 401 ? 'Token rejected' : 'Your route is down');
+      const blob = await response.blob();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      objectUrl = URL.createObjectURL(blob);
+      frame.src = objectUrl;
+      err.textContent = '';
+    }
+
+    function watch(url) {
+      if (timer) clearInterval(timer);
+      const tick = () => pull(url).catch((error) => { err.textContent = error.message; });
+      tick();
+      timer = setInterval(tick, 280);
+    }
+
+    document.getElementById('form').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const base = document.getElementById('url').value.trim();
+      const token = document.getElementById('token').value.trim();
+      if (!base) { err.textContent = 'Paste a Lookout address'; return; }
+      const host = base.replace(/^https?:\/\//, '');
+      setPlaque('REMOTE', host, 'route · watching');
+      watch(snapUrl(base, token));
+    });
+
+    document.getElementById('demo').addEventListener('click', () => {
+      setPlaque('COMPUTER', location.host, 'Wi-Fi · this machine');
+      watch('/snap?token=demo');
+    });
+
+    setPlaque('COMPUTER', location.host, 'Wi-Fi · this machine');
+    watch('/snap?token=demo');
+  </script>
+</body>
+</html>

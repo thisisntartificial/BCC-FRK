@@ -589,6 +589,7 @@
       "description": "Swift, SwiftUI, and Apple platform skills including concurrency, persistence, and design patterns.",
       "paths": [
         "skills/foundation-models-on-device",
+        "skills/ios-p2p-camera",
         "skills/liquid-glass-design",
         "skills/swift-actor-persistence",
         "skills/swift-concurrency-6-2",
