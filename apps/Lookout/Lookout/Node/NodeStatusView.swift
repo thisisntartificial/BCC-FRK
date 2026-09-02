@@ -15,66 +15,66 @@ struct NodeStatusView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
-            HStack {
-                Button("Roles", action: leave)
-                    .foregroundStyle(LookoutTheme.mute)
-                Spacer()
-                Text("LIVE")
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .tracking(2)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(LookoutTheme.brass)
-                    .foregroundStyle(LookoutTheme.ink)
-            }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                header
 
-            VStack(alignment: .leading, spacing: 8) {
-                Text("ADDRESS")
-                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                    .tracking(2)
-                    .foregroundStyle(LookoutTheme.brass.opacity(0.7))
-                Text("\(controller.host):\(LookoutBonjour.httpPort)")
-                    .font(.system(size: 26, weight: .bold, design: .monospaced))
-                    .foregroundStyle(LookoutTheme.paper)
-                    .textSelection(.enabled)
-                Text("LOOKOUT · \(roomName.uppercased()) · \(controller.statusLine.uppercased())")
-                    .font(.system(size: 11, weight: .medium, design: .monospaced))
-                    .tracking(1)
-                    .foregroundStyle(LookoutTheme.brass)
+                LookoutViewfinder(
+                    topLeft: roomName,
+                    topRight: "Camera",
+                    bottomLeft: "Wi-Fi",
+                    bottomRight: cameraGranted ? controller.statusLine : "No camera"
+                ) {
+                    VStack(spacing: 8) {
+                        Image(systemName: "video.fill")
+                            .font(.system(size: 28))
+                            .foregroundStyle(LookoutTheme.brassDim)
+                        Text(cameraGranted ? "Broadcasting this room" : "Camera access needed")
+                            .font(.system(size: 14, design: .serif))
+                            .foregroundStyle(LookoutTheme.mute)
+                    }
+                }
+
+                LookoutCard {
+                    LookoutLabel(text: "Address")
+                    Text("\(controller.host):\(LookoutBonjour.httpPort)")
+                        .font(.system(size: 24, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(LookoutTheme.paper)
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
+                        .textSelection(.enabled)
+                    Text("\(roomName) · \(controller.statusLine)".uppercased())
+                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                        .tracking(1.6)
+                        .foregroundStyle(LookoutTheme.brass)
+                }
+
+                LookoutCard {
+                    LookoutLabel(text: "PIN")
+                    Text(controller.pin)
+                        .font(.system(size: 44, weight: .bold, design: .monospaced))
+                        .tracking(10)
+                        .foregroundStyle(LookoutTheme.paper)
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(1)
+                    Text("Enter this on the viewer.")
+                        .font(.footnote)
+                        .foregroundStyle(LookoutTheme.mute)
+                }
+
+                if let error = controller.lastError {
+                    Text(error)
+                        .font(.footnote)
+                        .foregroundStyle(LookoutTheme.danger)
+                }
+
+                Text("Keep this phone plugged in and this screen open.")
+                    .font(.footnote)
+                    .foregroundStyle(LookoutTheme.mute)
             }
             .padding(20)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(LookoutTheme.panel)
-            .overlay(Rectangle().stroke(LookoutTheme.line, lineWidth: 1))
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text("PIN")
-                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                    .tracking(2)
-                    .foregroundStyle(LookoutTheme.brass.opacity(0.7))
-                Text(controller.pin)
-                    .font(.system(size: 44, weight: .bold, design: .monospaced))
-                    .tracking(8)
-                    .foregroundStyle(LookoutTheme.paper)
-                Text("Enter this on the viewer.")
-                    .font(.footnote)
-                    .foregroundStyle(LookoutTheme.mute)
-            }
-
-            if let error = controller.lastError {
-                Text(error)
-                    .font(.footnote)
-                    .foregroundStyle(Color(red: 0.83, green: 0.42, blue: 0.29))
-            }
-
-            Text("Keep this phone plugged in and this screen open.")
-                .font(.footnote)
-                .foregroundStyle(LookoutTheme.mute)
-            Spacer()
         }
-        .padding(24)
-        .background(LookoutTheme.ink.ignoresSafeArea())
+        .background(LookoutTheme.background)
         .navigationBarBackButtonHidden(true)
         .task {
             await requestCamera()
@@ -84,6 +84,18 @@ struct NodeStatusView: View {
         }
         .onDisappear {
             controller.stop()
+        }
+    }
+
+    private var header: some View {
+        HStack {
+            Button(action: leave) {
+                Label("Roles", systemImage: "chevron.left")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(LookoutTheme.mute)
+            }
+            Spacer()
+            LookoutBadge(text: cameraGranted ? "Live" : "Off", mode: cameraGranted ? .live : .off)
         }
     }
 

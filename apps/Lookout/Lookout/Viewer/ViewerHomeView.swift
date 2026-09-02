@@ -3,87 +3,132 @@ import SwiftUI
 struct ViewerHomeView: View {
     var onLeave: () -> Void
     @State private var controller = ViewerController()
+    @State private var showCustom = false
+
+    private var hasFrame: Bool { controller.latestJPEG != nil }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Button("Roles", action: leave)
-                    .foregroundStyle(LookoutTheme.mute)
-                Spacer()
-                Text(controller.statusLine.uppercased())
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .tracking(1)
-                    .foregroundStyle(LookoutTheme.brass)
-            }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                header
 
-            ZStack {
-                LookoutTheme.panel
-                if let data = controller.latestJPEG, let image = UIImage(data: data) {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                } else {
-                    Text("Waiting for a camera")
-                        .font(.system(.body, design: .serif))
-                        .foregroundStyle(LookoutTheme.mute)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 220)
-            .clipped()
-            .overlay(Rectangle().stroke(LookoutTheme.line, lineWidth: 1))
-
-            TextField("PIN", text: $controller.pin)
-                .keyboardType(.numberPad)
-                .font(.system(.title2, design: .monospaced))
-                .foregroundStyle(LookoutTheme.paper)
-                .padding(12)
-                .background(LookoutTheme.panel)
-                .overlay(Rectangle().stroke(LookoutTheme.line, lineWidth: 1))
-
-            if controller.nodes.isEmpty {
-                Text("No cameras on this Wi-Fi yet. Open Lookout on the spare phone and choose camera.")
-                    .font(.footnote)
-                    .foregroundStyle(LookoutTheme.mute)
-            } else {
-                ForEach(controller.nodes) { node in
-                    Button("Connect to \(node.name)") {
-                        controller.connect(to: node)
+                LookoutViewfinder(
+                    topLeft: hasFrame ? "Remote" : "Viewer",
+                    topRight: "",
+                    bottomLeft: "Wi-Fi",
+                    bottomRight: controller.statusLine
+                ) {
+                    if let data = controller.latestJPEG, let image = UIImage(data: data) {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFill()
+                    } else {
+                        VStack(spacing: 8) {
+                            Image(systemName: "eye")
+                                .font(.system(size: 28))
+                                .foregroundStyle(LookoutTheme.brassDim)
+                            Text("Waiting for a camera")
+                                .font(.system(size: 14, design: .serif))
+                                .foregroundStyle(LookoutTheme.mute)
+                        }
                     }
-                    .buttonStyle(LookoutPrimaryButton())
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    LookoutLabel(text: "PIN from the camera phone")
+                    TextField("000000", text: $controller.pin)
+                        .keyboardType(.numberPad)
+                        .font(.system(size: 24, weight: .semibold, design: .monospaced))
+                        .lookoutField()
+                }
+
+                VStack(alignment: .leading, spacing: 10) {
+                    LookoutLabel(text: "Cameras on this Wi-Fi")
+                    if controller.nodes.isEmpty {
+                        LookoutCard {
+                            HStack(spacing: 10) {
+                                ProgressView().tint(LookoutTheme.brass)
+                                Text("Searching. Open Lookout on the spare phone and choose Camera.")
+                                    .font(.footnote)
+                                    .foregroundStyle(LookoutTheme.mute)
+                            }
+                        }
+                    } else {
+                        ForEach(controller.nodes) { node in
+                            Button {
+                                controller.connect(to: node)
+                            } label: {
+                                HStack {
+                                    Image(systemName: "video.fill")
+                                    Text(node.name)
+                                    Spacer()
+                                    Text("CONNECT")
+                                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                        .tracking(1.5)
+                                }
+                                .padding(.horizontal, 16)
+                            }
+                            .buttonStyle(LookoutPrimaryButton())
+                        }
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) { showCustom.toggle() }
+                    } label: {
+                        HStack {
+                            LookoutLabel(text: "Custom URL")
+                            Spacer()
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(LookoutTheme.brassDim)
+                                .rotationEffect(.degrees(showCustom ? 180 : 0))
+                        }
+                    }
+
+                    if showCustom {
+                        TextField("http://100.x.x.x:8787", text: $controller.customURL)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .keyboardType(.URL)
+                            .font(.system(.body, design: .monospaced))
+                            .lookoutField()
+                        SecureField("Token", text: $controller.customToken)
+                            .font(.system(.body, design: .monospaced))
+                            .lookoutField()
+                        Button("Watch custom URL") {
+                            controller.connectCustomURL()
+                        }
+                        .buttonStyle(LookoutSecondaryButton())
+                    }
+                }
+
+                if let error = controller.lastError {
+                    Text(error)
+                        .font(.footnote)
+                        .foregroundStyle(LookoutTheme.danger)
                 }
             }
-
-            DisclosureGroup("Custom URL") {
-                TextField("http://100.x.x.x:8787", text: $controller.customURL)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .font(.system(.body, design: .monospaced))
-                    .padding(10)
-                    .background(LookoutTheme.panel)
-                SecureField("Token", text: $controller.customToken)
-                    .padding(10)
-                    .background(LookoutTheme.panel)
-                Button("Watch custom URL") {
-                    controller.connectCustomURL()
-                }
-                .buttonStyle(LookoutSecondaryButton())
-            }
-            .tint(LookoutTheme.brass)
-            .foregroundStyle(LookoutTheme.paper)
-
-            if let error = controller.lastError {
-                Text(error)
-                    .font(.footnote)
-                    .foregroundStyle(Color(red: 0.83, green: 0.42, blue: 0.29))
-            }
-            Spacer()
+            .padding(20)
         }
-        .padding(24)
-        .background(LookoutTheme.ink.ignoresSafeArea())
+        .background(LookoutTheme.background)
+        .scrollDismissesKeyboard(.interactively)
         .navigationBarBackButtonHidden(true)
         .onAppear { controller.startBrowsing() }
         .onDisappear { controller.stop() }
+    }
+
+    private var header: some View {
+        HStack {
+            Button(action: leave) {
+                Label("Roles", systemImage: "chevron.left")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(LookoutTheme.mute)
+            }
+            Spacer()
+            LookoutBadge(text: hasFrame ? "Live" : "Searching", mode: hasFrame ? .live : .wait)
+        }
     }
 
     private func leave() {

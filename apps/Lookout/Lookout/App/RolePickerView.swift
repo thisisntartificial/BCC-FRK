@@ -25,53 +25,75 @@ struct RolePickerView: View {
     }
 
     private var picker: some View {
-        VStack(alignment: .leading, spacing: 28) {
-            Text("LOOKOUT")
-                .font(.system(size: 13, weight: .bold))
-                .tracking(6)
-                .foregroundStyle(LookoutTheme.brass)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 28) {
+                LookoutWordmark()
+                    .padding(.top, 8)
 
-            Text("A spare phone\nbecomes a watch.")
-                .font(.system(size: 34, weight: .regular, design: .serif))
-                .foregroundStyle(LookoutTheme.paper)
-                .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("A spare phone\nbecomes a watch.")
+                        .font(.system(size: 36, weight: .regular, design: .serif))
+                        .foregroundStyle(LookoutTheme.paper)
+                        .fixedSize(horizontal: false, vertical: true)
 
-            Text("Same Wi-Fi. No account. Keep the camera plugged in.")
-                .font(.subheadline)
-                .foregroundStyle(LookoutTheme.mute)
+                    Text("Same Wi-Fi. No account. No cloud.")
+                        .font(.system(size: 15))
+                        .foregroundStyle(LookoutTheme.mute)
+                }
 
-            VStack(alignment: .leading, spacing: 8) {
-                Text("ROOM")
-                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                    .tracking(2)
-                    .foregroundStyle(LookoutTheme.brass.opacity(0.7))
-                TextField("Kitchen", text: $roomName)
-                    .font(.system(.title3, design: .monospaced))
-                    .foregroundStyle(LookoutTheme.paper)
-                    .padding(12)
-                    .background(LookoutTheme.panel)
-                    .overlay(Rectangle().stroke(LookoutTheme.line, lineWidth: 1))
-                    .textInputAutocapitalization(.words)
+                VStack(alignment: .leading, spacing: 8) {
+                    LookoutLabel(text: "Room")
+                    TextField("Kitchen", text: $roomName)
+                        .font(.system(.title3, design: .monospaced))
+                        .textInputAutocapitalization(.words)
+                        .autocorrectionDisabled()
+                        .lookoutField()
+                }
+
+                VStack(alignment: .leading, spacing: 10) {
+                    LookoutLabel(text: "This phone is the")
+                    Button {
+                        saveRoom()
+                        role = .camera
+                    } label: {
+                        roleRow(title: "Camera", detail: "Stays plugged in, points at the room.", icon: "video.fill")
+                    }
+                    .buttonStyle(LookoutPrimaryButton())
+
+                    Button {
+                        saveRoom()
+                        role = .viewer
+                    } label: {
+                        roleRow(title: "Viewer", detail: "Finds cameras on this Wi-Fi.", icon: "eye.fill")
+                    }
+                    .buttonStyle(LookoutSecondaryButton())
+                }
             }
+            .padding(24)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+        }
+        .background(LookoutTheme.background)
+        .scrollDismissesKeyboard(.interactively)
+    }
 
-            VStack(spacing: 10) {
-                Button("This phone is the camera") {
-                    saveRoom()
-                    role = .camera
-                }
-                .buttonStyle(LookoutPrimaryButton())
-
-                Button("This phone is the viewer") {
-                    saveRoom()
-                    role = .viewer
-                }
-                .buttonStyle(LookoutSecondaryButton())
+    private func roleRow(title: String, detail: String, icon: String) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon)
+                .font(.system(size: 18, weight: .semibold))
+                .frame(width: 24)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 16, weight: .semibold))
+                Text(detail)
+                    .font(.system(size: 12))
+                    .opacity(0.7)
             }
             Spacer()
+            Image(systemName: "chevron.right")
+                .font(.system(size: 13, weight: .semibold))
+                .opacity(0.6)
         }
-        .padding(28)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(LookoutTheme.ink.ignoresSafeArea())
+        .padding(.horizontal, 16)
     }
 
     private func saveRoom() {

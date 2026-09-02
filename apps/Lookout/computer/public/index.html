@@ -2,18 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0c0b09">
   <title>Lookout</title>
   <style>
     :root {
       --ink: #0c0b09;
+      --ink-2: #070605;
       --panel: #16130f;
+      --panel-2: #1d1914;
       --line: #3a3226;
+      --line-soft: #26211a;
       --brass: #e4c27a;
       --brass-dim: #8a7040;
       --paper: #f3e6c4;
       --mute: #9a8f7a;
-      --live: #d8a13a;
+      --danger: #d36a4a;
+      --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     }
     * { box-sizing: border-box; }
     html, body { height: 100%; }
@@ -23,217 +30,331 @@
         radial-gradient(1200px 600px at 50% -10%, #2a2218 0%, transparent 55%),
         var(--ink);
       color: var(--paper);
-      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+      font-family: var(--serif);
+      -webkit-font-smoothing: antialiased;
     }
+    button, input { font: inherit; border-radius: 0; }
+    button { cursor: pointer; }
+
+    /* ---------- shell ---------- */
     .shell {
       min-height: 100%;
-      max-width: 980px;
+      max-width: 1240px;
       margin: 0 auto;
-      padding: 28px 20px 40px;
+      padding: 24px clamp(16px, 3vw, 32px) 40px;
       display: flex;
       flex-direction: column;
-      gap: 22px;
+      gap: 20px;
     }
     header {
       display: flex;
-      align-items: baseline;
+      align-items: center;
       justify-content: space-between;
       gap: 16px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line-soft);
     }
     .mark {
-      font-size: 13px;
+      font-family: var(--sans);
+      font-size: 12px;
       letter-spacing: 0.46em;
-      text-indent: 0.46em;
       font-weight: 700;
       color: var(--brass);
     }
-    .live {
-      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    .mark span { color: var(--mute); font-weight: 400; letter-spacing: 0.2em; margin-left: 10px; }
+    @media (max-width: 480px) { .mark span { display: none; } }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-family: var(--mono);
       font-size: 11px;
       letter-spacing: 0.22em;
       color: var(--ink);
       background: var(--brass);
-      padding: 5px 9px 4px;
+      padding: 6px 11px 5px;
       border-radius: 999px;
+      white-space: nowrap;
     }
-    .live::before {
+    .badge::before {
       content: "";
-      display: inline-block;
-      width: 7px;
-      height: 7px;
-      margin-right: 7px;
+      width: 7px; height: 7px;
       border-radius: 50%;
       background: #1b1204;
-      box-shadow: 0 0 0 3px rgba(27, 18, 4, 0.15);
       animation: pulse 1.4s ease-in-out infinite;
     }
-    @keyframes pulse {
-      50% { opacity: 0.35; }
+    .badge.off { background: var(--panel-2); color: var(--mute); border: 1px solid var(--line); }
+    .badge.off::before { background: var(--danger); animation: none; }
+    .badge.wait { background: var(--panel-2); color: var(--brass); border: 1px solid var(--line); }
+    .badge.wait::before { background: var(--brass); }
+    @keyframes pulse { 50% { opacity: 0.3; } }
+
+    /* ---------- layout ---------- */
+    .stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 20px;
+      align-items: start;
     }
+    @media (max-width: 900px) {
+      .stage { grid-template-columns: 1fr; }
+    }
+
+    /* ---------- viewfinder ---------- */
     .finder {
       position: relative;
-      background: #070605;
+      aspect-ratio: 16 / 9;
+      background: var(--ink-2);
       border: 1px solid var(--line);
       box-shadow: 0 40px 90px rgba(0, 0, 0, 0.45);
       overflow: hidden;
     }
     .finder img {
-      display: block;
-      width: 100%;
-      aspect-ratio: 16 / 9;
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
       object-fit: cover;
       filter: saturate(0.85) contrast(1.08);
+      transition: opacity 0.4s;
     }
-    .finder::before,
-    .finder::after {
-      content: "";
+    .finder.stale img { opacity: 0.35; }
+    .corner {
       position: absolute;
-      width: 28px;
-      height: 28px;
-      border-color: var(--brass);
-      border-style: solid;
+      width: 26px; height: 26px;
+      border: 2px solid var(--brass);
       pointer-events: none;
       z-index: 2;
     }
-    .finder::before {
-      top: 14px;
-      left: 14px;
-      border-width: 2px 0 0 2px;
-    }
-    .finder::after {
-      right: 14px;
-      bottom: 14px;
-      border-width: 0 2px 2px 0;
-    }
+    .corner.tl { top: 14px; left: 14px; border-right: 0; border-bottom: 0; }
+    .corner.tr { top: 14px; right: 14px; border-left: 0; border-bottom: 0; }
+    .corner.bl { bottom: 14px; left: 14px; border-right: 0; border-top: 0; }
+    .corner.br { bottom: 14px; right: 14px; border-left: 0; border-top: 0; }
+
     .hud {
       position: absolute;
-      inset: auto 18px 16px 18px;
+      left: 0; right: 0;
+      padding: 0 52px;
       display: flex;
       justify-content: space-between;
-      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      align-items: center;
+      font-family: var(--mono);
       font-size: 11px;
-      letter-spacing: 0.16em;
+      letter-spacing: 0.18em;
       color: var(--brass);
-      text-shadow: 0 1px 8px #000;
+      text-shadow: 0 1px 6px #000, 0 0 2px #000;
       pointer-events: none;
+      z-index: 2;
     }
-    .plaque {
-      background: linear-gradient(180deg, #1d1914 0%, #12100c 100%);
+    .hud.top { top: 20px; }
+    .hud.bottom { bottom: 20px; }
+    .hud .dim { color: var(--mute); }
+    @media (max-width: 480px) {
+      .hud { padding: 0 44px; font-size: 10px; letter-spacing: 0.14em; }
+    }
+
+    .finder .empty {
+      position: absolute; inset: 0;
+      display: none;
+      place-items: center;
+      text-align: center;
+      padding: 24px;
+      color: var(--mute);
+      font-size: 15px;
+      z-index: 1;
+    }
+    .finder.stale .empty { display: grid; }
+    .finder .empty strong { display: block; color: var(--danger); font-family: var(--mono); font-size: 12px; letter-spacing: 0.2em; margin-bottom: 8px; }
+
+    /* ---------- side panel ---------- */
+    aside { display: flex; flex-direction: column; gap: 14px; }
+
+    .card {
+      background: linear-gradient(180deg, var(--panel-2) 0%, var(--panel) 100%);
       border: 1px solid var(--line);
-      padding: 22px 22px 18px;
+      padding: 18px 18px 16px;
     }
-    .plaque small {
+    .label {
       display: block;
-      font-family: ui-monospace, Menlo, monospace;
+      font-family: var(--mono);
       font-size: 10px;
       letter-spacing: 0.28em;
       color: var(--brass-dim);
       margin-bottom: 8px;
     }
-    .plaque strong {
+    .addr {
       display: block;
-      font-family: ui-monospace, Menlo, monospace;
-      font-size: clamp(1.15rem, 3vw, 1.7rem);
-      letter-spacing: 0.04em;
+      font-family: var(--mono);
+      font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+      letter-spacing: 0.03em;
       color: var(--paper);
+      word-break: break-all;
+      user-select: all;
     }
-    .plaque em {
+    .meta {
       display: block;
       margin-top: 8px;
+      font-family: var(--mono);
       font-style: normal;
-      font-family: ui-monospace, Menlo, monospace;
-      font-size: 12px;
-      letter-spacing: 0.18em;
+      font-size: 11px;
+      letter-spacing: 0.16em;
       color: var(--brass);
     }
-    form {
-      display: grid;
-      grid-template-columns: 1fr 160px auto auto;
-      gap: 10px;
-    }
-    @media (max-width: 720px) {
-      form { grid-template-columns: 1fr 1fr; }
-      button { grid-column: span 1; }
-    }
-    input, button {
-      font: inherit;
-      border-radius: 0;
-    }
+
+    form { display: flex; flex-direction: column; gap: 10px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field .label { margin-bottom: 0; }
     input {
+      width: 100%;
       background: #100e0b;
       border: 1px solid var(--line);
       color: var(--paper);
       padding: 12px 12px;
-      font-family: ui-monospace, Menlo, monospace;
+      font-family: var(--mono);
       font-size: 13px;
     }
-    input:focus {
-      outline: 1px solid var(--brass-dim);
-    }
-    button {
+    input::placeholder { color: #5f5748; }
+    input:focus { outline: none; border-color: var(--brass-dim); box-shadow: 0 0 0 1px var(--brass-dim); }
+
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+    .btn {
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      padding: 12px 14px;
       border: 1px solid var(--brass);
       background: var(--brass);
       color: var(--ink);
-      padding: 12px 14px;
-      letter-spacing: 0.08em;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
+      transition: filter 0.15s;
     }
-    button.ghost {
-      background: transparent;
-      color: var(--brass);
+    .btn:hover { filter: brightness(1.08); }
+    .btn:active { filter: brightness(0.92); }
+    .btn.ghost { background: transparent; color: var(--brass); }
+    .btn.ghost:hover { background: rgba(228, 194, 122, 0.08); }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--line-soft);
+      border: 1px solid var(--line);
     }
-    p.note, #err {
-      margin: 0;
-      font-family: ui-sans-serif, system-ui, sans-serif;
-      font-size: 13px;
-      color: var(--mute);
+    .stat { background: var(--panel); padding: 12px 12px 10px; }
+    .stat .label { margin-bottom: 4px; }
+    .stat b { font-family: var(--mono); font-weight: 500; font-size: 15px; color: var(--paper); }
+
+    .note { margin: 0; font-family: var(--sans); font-size: 13px; line-height: 1.5; color: var(--mute); }
+    .err { margin: 0; min-height: 1.3em; font-family: var(--sans); font-size: 13px; color: var(--danger); }
+
+    footer {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--line-soft);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--brass-dim);
     }
-    #err { color: #d36a4a; min-height: 1.2em; }
   </style>
 </head>
 <body>
   <div class="shell">
     <header>
-      <div class="mark">LOOKOUT</div>
-      <div class="live" id="live">LIVE</div>
+      <div class="mark">LOOKOUT <span>COMPUTER VIEWER</span></div>
+      <div class="badge" id="badge">LIVE</div>
     </header>
 
-    <section class="finder">
-      <img id="frame" alt="Lookout feed">
-      <div class="hud">
-        <span id="hud-room">COMPUTER</span>
-        <span id="hud-state">DEMO</span>
-      </div>
-    </section>
+    <div class="stage">
+      <section class="finder" id="finder" aria-label="Camera feed">
+        <img id="frame" alt="">
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
+        <div class="hud top">
+          <span id="hud-room">COMPUTER</span>
+          <span id="hud-clock" class="dim">--:--:--</span>
+        </div>
+        <div class="hud bottom">
+          <span id="hud-route" class="dim">WI-FI</span>
+          <span id="hud-state">DEMO</span>
+        </div>
+        <div class="empty">
+          <div><strong id="empty-title">NO SIGNAL</strong><span id="empty-body">Waiting for frames.</span></div>
+        </div>
+      </section>
 
-    <section class="plaque">
-      <small>ADDRESS</small>
-      <strong id="block-line">127.0.0.1:8788</strong>
-      <em id="block-meta">Wi-Fi · this machine</em>
-    </section>
+      <aside>
+        <div class="card">
+          <span class="label">WATCHING</span>
+          <strong class="addr" id="addr">127.0.0.1:8788</strong>
+          <em class="meta" id="meta">Wi-Fi · this machine</em>
+        </div>
 
-    <form id="form">
-      <input id="url" placeholder="http://192.168.1.42:8787" autocomplete="off" spellcheck="false">
-      <input id="token" placeholder="Token" autocomplete="off" spellcheck="false">
-      <button class="go" type="submit">Watch URL</button>
-      <button class="ghost" type="button" id="demo">This computer</button>
-    </form>
-    <p class="note">Viewer for a spare-phone camera. Paste a Lookout address, or watch the demo node on this machine.</p>
-    <div id="err"></div>
+        <div class="stats">
+          <div class="stat"><span class="label">FPS</span><b id="st-fps">–</b></div>
+          <div class="stat"><span class="label">LATENCY</span><b id="st-lat">–</b></div>
+          <div class="stat"><span class="label">FRAMES</span><b id="st-n">0</b></div>
+        </div>
+
+        <form id="form" class="card">
+          <div class="field">
+            <label class="label" for="url">LOOKOUT ADDRESS</label>
+            <input id="url" placeholder="http://192.168.1.42:8787" autocomplete="off" spellcheck="false" inputmode="url">
+          </div>
+          <div class="field">
+            <label class="label" for="token">TOKEN</label>
+            <input id="token" type="password" placeholder="From the camera phone" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="actions">
+            <button class="btn" type="submit">Watch URL</button>
+            <button class="btn ghost" type="button" id="demo">This computer</button>
+          </div>
+          <p class="err" id="err"></p>
+        </form>
+
+        <p class="note">Paste the address block shown on a spare-phone camera, or watch the demo node running on this machine.</p>
+      </aside>
+    </div>
+
+    <footer>
+      <span>LOCAL · NO ACCOUNT · NO CLOUD</span>
+      <span id="foot-host"></span>
+    </footer>
   </div>
-  <script>
-    const frame = document.getElementById('frame');
-    const err = document.getElementById('err');
-    let timer = null;
-    let objectUrl = null;
 
-    function setPlaque(room, line, meta) {
-      document.getElementById('hud-room').textContent = room;
-      document.getElementById('hud-state').textContent = meta.split('·')[0].trim().toUpperCase();
-      document.getElementById('block-line').textContent = line;
-      document.getElementById('block-meta').textContent = meta;
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const frame = $('frame');
+    const finder = $('finder');
+    const badge = $('badge');
+    const err = $('err');
+    const INTERVAL = 280;
+
+    let timer = null;
+    let current = null;
+    let objectUrl = null;
+    let frames = 0;
+    let fpsWindow = [];
+    let failures = 0;
+
+    function setBadge(mode, text) {
+      badge.className = 'badge' + (mode ? ' ' + mode : '');
+      badge.textContent = text;
+    }
+
+    function setTarget({ room, addr, route, meta }) {
+      $('hud-room').textContent = room;
+      $('hud-route').textContent = route.toUpperCase();
+      $('addr').textContent = addr;
+      $('meta').textContent = meta;
+      $('foot-host').textContent = addr.toUpperCase();
+    }
+
+    function setState(state) {
+      $('hud-state').textContent = state.toUpperCase();
     }
 
     function snapUrl(base, token) {
@@ -243,40 +364,91 @@
       return url.toString();
     }
 
+    function stats(latency) {
+      frames += 1;
+      const now = performance.now();
+      fpsWindow.push(now);
+      fpsWindow = fpsWindow.filter((t) => now - t < 2000);
+      $('st-fps').textContent = (fpsWindow.length / 2).toFixed(1);
+      $('st-lat').textContent = Math.round(latency) + ' ms';
+      $('st-n').textContent = frames;
+    }
+
     async function pull(url) {
+      const t0 = performance.now();
       const response = await fetch(url, { cache: 'no-store' });
-      if (!response.ok) throw new Error(response.status === 401 ? 'Token rejected' : 'Your route is down');
+      if (!response.ok) {
+        throw new Error(response.status === 401 ? 'Token rejected' : 'Route is down (' + response.status + ')');
+      }
       const blob = await response.blob();
       if (objectUrl) URL.revokeObjectURL(objectUrl);
       objectUrl = URL.createObjectURL(blob);
       frame.src = objectUrl;
+      stats(performance.now() - t0);
+      failures = 0;
+      finder.classList.remove('stale');
       err.textContent = '';
+      setBadge('', 'LIVE');
     }
 
-    function watch(url) {
+    function fail(error) {
+      failures += 1;
+      err.textContent = error.message;
+      if (failures >= 3) {
+        finder.classList.add('stale');
+        $('empty-title').textContent = 'NO SIGNAL';
+        $('empty-body').textContent = error.message;
+        setBadge('off', 'OFFLINE');
+        setState('offline');
+        fpsWindow = [];
+        $('st-fps').textContent = '–';
+        $('st-lat').textContent = '–';
+      }
+    }
+
+    function watch(url, state) {
       if (timer) clearInterval(timer);
-      const tick = () => pull(url).catch((error) => { err.textContent = error.message; });
+      current = { url, state };
+      frames = 0; fpsWindow = []; failures = 0;
+      $('st-n').textContent = '0';
+      setBadge('wait', 'CONNECTING');
+      setState(state);
+      const tick = () => pull(url).then(() => setState(state)).catch(fail);
       tick();
-      timer = setInterval(tick, 280);
+      timer = setInterval(tick, INTERVAL);
     }
 
-    document.getElementById('form').addEventListener('submit', (event) => {
+    function watchDemo() {
+      setTarget({ room: 'COMPUTER', addr: location.host, route: 'Wi-Fi', meta: 'Wi-Fi · this machine' });
+      watch('/snap?token=demo', 'demo');
+    }
+
+    $('form').addEventListener('submit', (event) => {
       event.preventDefault();
-      const base = document.getElementById('url').value.trim();
-      const token = document.getElementById('token').value.trim();
-      if (!base) { err.textContent = 'Paste a Lookout address'; return; }
-      const host = base.replace(/^https?:\/\//, '');
-      setPlaque('REMOTE', host, 'route · watching');
-      watch(snapUrl(base, token));
+      const base = $('url').value.trim();
+      const token = $('token').value.trim();
+      if (!base) { err.textContent = 'Paste a Lookout address'; $('url').focus(); return; }
+      let target;
+      try { target = snapUrl(/^https?:\/\//i.test(base) ? base : 'http://' + base, token); }
+      catch { err.textContent = 'That address is not valid'; return; }
+      const host = new URL(target).host;
+      setTarget({ room: 'REMOTE', addr: host, route: 'Route', meta: 'route · spare phone' });
+      watch(target, 'watching');
     });
 
-    document.getElementById('demo').addEventListener('click', () => {
-      setPlaque('COMPUTER', location.host, 'Wi-Fi · this machine');
-      watch('/snap?token=demo');
+    $('demo').addEventListener('click', watchDemo);
+
+    setInterval(() => {
+      $('hud-clock').textContent = new Date().toLocaleTimeString([], { hour12: false });
+    }, 1000);
+
+    // Pause polling in background tabs, resume the same target when visible again.
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && timer) { clearInterval(timer); timer = null; }
+      else if (!document.hidden && !timer && current) { watch(current.url, current.state); }
     });
 
-    setPlaque('COMPUTER', location.host, 'Wi-Fi · this machine');
-    watch('/snap?token=demo');
+    watchDemo();
   </script>
 </body>
 </html>
