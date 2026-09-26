@@ -1,0 +1,19 @@
+{
+  "name": "jev-fable",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Bounded-judgment decision layer for agents (Noul / Choice / Score questions, confidence-gated) with Claude Fable 5.1 as the judge",
+  "main": "src/index.js",
+  "bin": {
+    "jev": "bin/jev.js",
+    "jev-guard": "bin/jev-guard.js"
+  },
+  "scripts": {
+    "test": "node tests/run-all.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
